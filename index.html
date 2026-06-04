@@ -1309,8 +1309,10 @@
   </div>
   <div style="padding:14px;max-width:560px;width:100%;margin:0 auto">
 
-    <div style="background:var(--bg-elev);padding:10px 14px;border-radius:10px;font-size:12px;color:var(--text-dim);margin-bottom:14px">
-      💡 Отмечай чекбоксом → проставляй количество. Внизу — кнопки отправки.
+    <div style="background:linear-gradient(135deg,rgba(255,107,53,.15),rgba(255,152,0,.1));padding:12px 14px;border-radius:10px;font-size:13px;color:var(--text);margin-bottom:14px;border:1px solid rgba(255,107,53,.3)">
+      🧠 <b>Умный расчёт:</b> система сама посчитала что и сколько нужно заказать
+      на основе остатков и среднего расхода. Что в норме — отмечено внизу серым.
+      Можешь добавить вручную галочкой.
     </div>
 
     <div id="orderItemsList" style="display:flex;flex-direction:column;gap:8px"></div>
@@ -1356,99 +1358,118 @@
 
 <script>
 // === SUPPLIER ORDERS ===
+// === SUPPLIER TEMPLATES ===
+// Каждая позиция: cur (текущий остаток), daily (средн.расход/день), price (за единицу), cycle (дней до след.закупки)
+// recommended = max(0, daily × cycle × 1.3 (страх) − cur), округление вверх
 const SUPPLIER_TEMPLATES = {
   'крабс': {
     name: 'Мистер Крабс',
     emoji: '🦀',
+    cycle: 7,  // раз в неделю
     items: [
-      // Часто (топ — что заказывают регулярно)
-      {n:'Майонез', u:'кг', last:20, est:1800},
-      {n:'Моцарелла', u:'кг', last:4, est:1100},
-      {n:'Картошка фри', u:'кг', last:7.5, est:550},
-      {n:'Имбирь розовый', u:'кг', last:2.85, est:1140},
-      {n:'Масло фритюрное', u:'кг', last:10, est:1600},
-      {n:'Нори', u:'шт', last:200, est:2028},
-      {n:'Соусничка 50мл', u:'шт', last:240, est:386},
-      {n:'Пеперони', u:'кг', last:22, est:8800},
-      {n:'Грудка копч', u:'кг', last:3.865, est:2706},
-      {n:'Крабовые палочки вичи', u:'кг', last:3, est:1500},
-      {n:'Икра масаго', u:'кг', last:0.5, est:700},
-      {n:'Рис', u:'кг', last:20, est:2100},
-      {n:'Бекон в/к', u:'кг', last:2, est:1260},
-      {n:'Шрирача', u:'кг', last:0.815, est:945},
-      {n:'Сырные палочки', u:'кг', last:3, est:2400},
-      // Реже
-      {n:'Наггетсы', u:'кг', last:1, est:415},
-      {n:'Сырная лепешка', u:'шт', last:18, est:295},
-      {n:'Форель (обрезь)', u:'кг', last:1, est:850},
-      {n:'Ланч бокс', u:'шт', last:150, est:735},
-      {n:'Крылышки острые в панировке', u:'кг', last:2, est:1800},
-      {n:'Унаги соус', u:'кг', last:1.8, est:2160},
-      {n:'Соевый соус', u:'л', last:20, est:1600},
-      {n:'Ветчина на пиццу', u:'кг', last:1, est:470},
-      {n:'Коробка для пиццы', u:'шт', last:50, est:1121},
-      {n:'Паста томатная', u:'кг', last:5, est:965},
-      {n:'Топпинг клубника', u:'кг', last:1, est:660},
-      {n:'Майонез на маринад', u:'кг', last:10, est:850},
-      {n:'Васаби порошок', u:'кг', last:2, est:1550},
-      {n:'Кимчи', u:'кг', last:1.8, est:790},
-      {n:'Ланч-бокс черный', u:'шт', last:100, est:540},
+      {n:'Майонез',                u:'кг',  cur:32.63, daily:0.5,   price:90},
+      {n:'Моцарелла',              u:'кг',  cur:2.67,  daily:0.42,  price:275},
+      {n:'Картошка фри',           u:'кг',  cur:0,     daily:0.6,   price:73},
+      {n:'Имбирь розовый',         u:'кг',  cur:2.92,  daily:0.35,  price:400},
+      {n:'Масло фритюрное',        u:'кг',  cur:8.89,  daily:1.3,   price:160},
+      {n:'Нори',                   u:'шт',  cur:400,   daily:22,    price:10},
+      {n:'Соусничка 50мл',         u:'шт',  cur:80,    daily:30,    price:1.6},
+      {n:'Пеперони',               u:'кг',  cur:1.85,  daily:0.08,  price:400},
+      {n:'Грудка копч',            u:'кг',  cur:2.05,  daily:0.28,  price:700},
+      {n:'Крабовые палочки вичи',  u:'кг',  cur:3,     daily:0.18,  price:500},
+      {n:'Икра масаго',            u:'кг',  cur:0.6,   daily:0.06,  price:1400},
+      {n:'Рис',                    u:'кг',  cur:23.41, daily:1.0,   price:105},
+      {n:'Бекон в/к',              u:'кг',  cur:1.92,  daily:0.14,  price:630},
+      {n:'Шрирача',                u:'кг',  cur:0.79,  daily:0.12,  price:1160},
+      {n:'Сырные палочки',         u:'кг',  cur:1.44,  daily:0.12,  price:800},
+      {n:'Наггетсы',               u:'кг',  cur:3.79,  daily:0.08,  price:415},
+      {n:'Сырная лепешка',         u:'шт',  cur:0,     daily:1.5,   price:16.4},
+      {n:'Форель (обрезь)',        u:'кг',  cur:0,     daily:0.07,  price:850},
+      {n:'Ланч бокс',              u:'шт',  cur:262,   daily:25,    price:4.9},
+      {n:'Крылышки острые в панир.',u:'кг', cur:1.63,  daily:0.1,   price:900},
+      {n:'Унаги соус',             u:'кг',  cur:2.35,  daily:0.12,  price:1200},
+      {n:'Соевый соус',            u:'л',   cur:2.85,  daily:0.04,  price:80},
+      {n:'Ветчина на пиццу',       u:'кг',  cur:1.495, daily:0.18,  price:470},
+      {n:'Коробка для пиццы',      u:'шт',  cur:48,    daily:3,     price:22.4},
+      {n:'Паста томатная',         u:'кг',  cur:4.34,  daily:0.18,  price:193},
+      {n:'Топпинг клубника',       u:'кг',  cur:0.295, daily:0.04,  price:660},
+      {n:'Васаби порошок',         u:'кг',  cur:0.775, daily:0.025, price:775},
+      {n:'Кимчи',                  u:'кг',  cur:3.19,  daily:0.13,  price:440},
+      {n:'Ланч-бокс черный',       u:'шт',  cur:186,   daily:14,    price:5.4},
+      {n:'Майонез на маринад',     u:'кг',  cur:0,     daily:0.35,  price:85},
     ]
   },
   'пятёрочка': {
     name: 'Пятёрочка',
     emoji: '🛒',
+    cycle: 3,
     items: [
-      {n:'Помидор свежий', u:'кг', last:3, est:600},
-      {n:'Огурец свежий', u:'кг', last:6, est:900},
-      {n:'Молоко', u:'л', last:2, est:210},
-      {n:'Сок томатный', u:'л', last:2, est:270},
-      {n:'Авокадо', u:'кг', last:0.5, est:550},
-      {n:'Сахар', u:'кг', last:5, est:325},
-      {n:'Соль', u:'кг', last:3, est:90},
-      {n:'Морковь свежая', u:'кг', last:4, est:200},
-      {n:'Перчатки виниловые', u:'упак', last:1, est:200},
-      {n:'Дрожжи', u:'г', last:200, est:120},
-      {n:'Пекинская капуста', u:'кг', last:0.8, est:160},
-      {n:'Белокочанная капуста', u:'кг', last:8, est:400},
-      {n:'Чеснок свежий', u:'кг', last:0.2, est:85},
-      {n:'Укроп свежий', u:'кг', last:0.3, est:180},
-      {n:'Грибы свежие', u:'кг', last:0.5, est:200},
-      {n:'Тарелки картонные', u:'шт', last:50, est:250},
-      {n:'Полотенце бумажное', u:'упак', last:1, est:120},
-      {n:'Моющее для посуды', u:'шт', last:1, est:180},
-      {n:'Мешки для мусора', u:'упак', last:1, est:150},
+      {n:'Помидор свежий',         u:'кг',  cur:3.07,  daily:0.5,   price:200},
+      {n:'Огурец свежий',          u:'кг',  cur:3.59,  daily:0.78,  price:150},
+      {n:'Молоко',                 u:'л',   cur:1.1,   daily:0.2,   price:105},
+      {n:'Сок томатный',           u:'л',   cur:2.73,  daily:0.25,  price:135},
+      {n:'Авокадо',                u:'кг',  cur:0.26,  daily:0.018, price:1100},
+      {n:'Сахар',                  u:'кг',  cur:5.05,  daily:0.18,  price:65},
+      {n:'Соль',                   u:'кг',  cur:0.25,  daily:0.02,  price:30},
+      {n:'Морковь свежая',         u:'кг',  cur:1.97,  daily:0.4,   price:50},
+      {n:'Перчатки виниловые',     u:'упак',cur:0,     daily:0.1,   price:200},
+      {n:'Дрожжи',                 u:'г',   cur:123,   daily:8,     price:0.6},
+      {n:'Пекинская капуста',      u:'кг',  cur:0,     daily:0.1,   price:200},
+      {n:'Белокочанная капуста',   u:'кг',  cur:5.31,  daily:1.0,   price:50},
+      {n:'Чеснок свежий',          u:'кг',  cur:0.55,  daily:0.04,  price:400},
+      {n:'Укроп свежий',           u:'кг',  cur:0.22,  daily:0.025, price:600},
+      {n:'Грибы свежие',           u:'кг',  cur:0.77,  daily:0.05,  price:400},
+      {n:'Тарелки картонные',      u:'шт',  cur:0,     daily:6,     price:5},
+      {n:'Моющее для посуды',      u:'шт',  cur:0,     daily:0.07,  price:180},
+      {n:'Мешки для мусора',       u:'упак',cur:0,     daily:0.05,  price:150},
     ]
   },
   'товарный': {
     name: 'Товарный двор',
     emoji: '🐟',
+    cycle: 7,
     items: [
-      {n:'Лосось целый неразделанный', u:'кг', last:9, est:11_135},
-      {n:'Креветка сырая', u:'кг', last:2, est:2300},
+      {n:'Лосось целый неразделанный', u:'кг', cur:9.67, daily:1.4, price:1290},
+      {n:'Креветка сырая',             u:'кг', cur:0.89, daily:0.3, price:1150},
     ]
   },
   'шаповалов': {
     name: 'Шаповалов',
     emoji: '🍗',
+    cycle: 10,
     items: [
-      {n:'Филе грудки (сырое)', u:'кг', last:35, est:9625},
-      {n:'Грудка сырая', u:'кг', last:25, est:6850},
+      {n:'Филе грудки (сырое)', u:'кг', cur:0, daily:2.7, price:275},
+      {n:'Грудка сырая',        u:'кг', cur:0, daily:1.8, price:270},
     ]
   },
   'ильхом': {
     name: 'Ильхом лаваш',
     emoji: '🥬',
+    cycle: 5,
     items: [
-      {n:'Лаваш', u:'шт', last:50, est:1850},
-      {n:'Огурец свежий', u:'кг', last:7, est:1050},
-      {n:'Помидор свежий', u:'кг', last:6, est:1200},
-      {n:'Белокочанная капуста', u:'кг', last:5, est:250},
-      {n:'Морковь свежая', u:'кг', last:4, est:200},
-      {n:'Чеснок свежий', u:'кг', last:0.5, est:200},
+      {n:'Лаваш',                u:'шт', cur:37,   daily:11,   price:37},
+      {n:'Огурец свежий',        u:'кг', cur:3.59, daily:0.78, price:150},
+      {n:'Помидор свежий',       u:'кг', cur:3.07, daily:0.5,  price:200},
+      {n:'Белокочанная капуста', u:'кг', cur:5.31, daily:1.0,  price:50},
+      {n:'Морковь свежая',       u:'кг', cur:1.97, daily:0.4,  price:50},
+      {n:'Чеснок свежий',        u:'кг', cur:0.55, daily:0.04, price:400},
     ]
   },
 };
+
+// Расчёт рекомендации
+function calcRec(it, cycle){
+  const planned = it.daily * cycle * 1.3; // что нужно на cycle дней + 30% страх
+  const need = planned - it.cur;
+  if(need <= 0) return 0;
+  // Округление вверх до 0.5 для кг/л или до 10 для шт >= 100
+  if(it.u==='шт' || it.u==='упак'){
+    if(need > 100) return Math.ceil(need/10)*10;
+    return Math.ceil(need);
+  }
+  if(it.u==='г') return Math.ceil(need/10)*10;
+  return Math.ceil(need*2)/2; // до 0.5
+}
 
 let currentSupplier = null;
 
@@ -1457,16 +1478,36 @@ function openSupplier(key){
   if(!currentSupplier) return;
   document.getElementById('orderSupplierName').textContent = `${currentSupplier.emoji} ${currentSupplier.name}`;
   const list = document.getElementById('orderItemsList');
-  list.innerHTML = currentSupplier.items.map((it,i)=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px" data-idx="${i}">
-      <input type="checkbox" id="oi${i}" onchange="toggleOrderItem(${i},this)" style="width:24px;height:24px;cursor:pointer;accent-color:var(--accent)">
-      <label for="oi${i}" style="flex:1;font-size:14px;cursor:pointer">${it.n}</label>
-      <input type="text" inputmode="decimal" value="${it.last}" disabled
-        style="width:80px;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text-dim);text-align:center;font-size:14px;font-weight:600;opacity:.5"
-        onchange="updateOrderTotals()">
-      <span style="color:var(--text-dim);font-size:12px;min-width:30px">${it.u}</span>
-    </div>
-  `).join('');
+  const cycle = currentSupplier.cycle;
+  // Считаем рекомендации
+  currentSupplier.items.forEach(it=>{ it.rec = calcRec(it, cycle); });
+  // Сортируем: сначала где нужно заказать, потом избыток
+  const sorted = currentSupplier.items.map((it,i)=>({it,i})).sort((a,b)=>{
+    if(a.it.rec>0 && b.it.rec===0) return -1;
+    if(a.it.rec===0 && b.it.rec>0) return 1;
+    return b.it.rec - a.it.rec;
+  });
+  list.innerHTML = sorted.map(({it,i})=>{
+    const need = it.rec > 0;
+    const daysLeft = it.daily > 0 ? Math.floor(it.cur / it.daily) : 999;
+    const hint = need
+      ? `остаток ${it.cur} ${it.u}, расход ~${it.daily}/день, хватит на ${daysLeft} дн.`
+      : `остаток ${it.cur} ${it.u} — хватит на ${daysLeft} дней (пропустить)`;
+    const initVal = need ? it.rec : '';
+    return `
+      <div data-idx="${i}" style="display:flex;flex-direction:column;gap:4px;padding:12px 14px;background:${need?'rgba(255,107,53,.08)':'var(--bg-card)'};border:1px solid ${need?'var(--accent)':'var(--border)'};border-radius:10px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="checkbox" id="oi${i}" ${need?'checked':''} onchange="toggleOrderItem(${i},this)" style="width:24px;height:24px;cursor:pointer;accent-color:var(--accent)">
+          <label for="oi${i}" style="flex:1;font-size:14px;cursor:pointer;font-weight:${need?'600':'400'}">${it.n}</label>
+          <input type="text" inputmode="decimal" value="${initVal}" ${need?'':'disabled'}
+            style="width:80px;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:${need?'var(--text)':'var(--text-dim)'};text-align:center;font-size:14px;font-weight:700;opacity:${need?1:.5}"
+            onchange="updateOrderTotals()">
+          <span style="color:var(--text-dim);font-size:12px;min-width:30px">${it.u}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-dim);padding-left:34px">${hint}</div>
+      </div>
+    `;
+  }).join('');
   document.getElementById('orderComment').value = '';
   updateOrderTotals();
   show('orderForm');
@@ -1479,7 +1520,7 @@ function toggleOrderItem(i,cb){
   if(cb.checked){
     qty.style.opacity = '1';
     qty.style.color = 'var(--text)';
-    if(!qty.value) qty.value = currentSupplier.items[i].last;
+    if(!qty.value) qty.value = currentSupplier.items[i].rec || currentSupplier.items[i].daily * currentSupplier.cycle;
     row.style.borderColor = 'var(--accent)';
     row.style.background = 'rgba(255,107,53,.08)';
   } else {
@@ -1500,8 +1541,8 @@ function updateOrderTotals(){
     count++;
     const idx = parseInt(row.dataset.idx);
     const it = currentSupplier.items[idx];
-    const qty = parseFloat(row.querySelector('input[type=text]').value) || it.last;
-    total += (qty / it.last) * it.est;
+    const qty = parseFloat(row.querySelector('input[type=text]').value) || it.rec || 0;
+    total += qty * (it.price || 0);
   });
   document.getElementById('orderCounter').textContent = count + ' выбрано';
   document.getElementById('orderTotal').textContent = count + ' позиций';
@@ -1516,7 +1557,7 @@ function buildOrderText(){
     if(!cb.checked) return;
     const idx = parseInt(row.dataset.idx);
     const it = currentSupplier.items[idx];
-    const qty = row.querySelector('input[type=text]').value || it.last;
+    const qty = row.querySelector('input[type=text]').value || it.rec;
     items.push(`• ${it.n} — ${qty} ${it.u}`);
   });
   const comment = document.getElementById('orderComment').value.trim();
