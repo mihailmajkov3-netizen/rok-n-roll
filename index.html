@@ -1461,8 +1461,8 @@ function openSupplier(key){
     <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px" data-idx="${i}">
       <input type="checkbox" id="oi${i}" onchange="toggleOrderItem(${i},this)" style="width:24px;height:24px;cursor:pointer;accent-color:var(--accent)">
       <label for="oi${i}" style="flex:1;font-size:14px;cursor:pointer">${it.n}</label>
-      <input type="text" inputmode="decimal" placeholder="${it.last}" disabled
-        style="width:80px;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);text-align:center;font-size:14px;font-weight:600"
+      <input type="text" inputmode="decimal" value="${it.last}" disabled
+        style="width:80px;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text-dim);text-align:center;font-size:14px;font-weight:600;opacity:.5"
         onchange="updateOrderTotals()">
       <span style="color:var(--text-dim);font-size:12px;min-width:30px">${it.u}</span>
     </div>
@@ -1476,9 +1476,17 @@ function toggleOrderItem(i,cb){
   const row = cb.closest('[data-idx]');
   const qty = row.querySelector('input[type=text]');
   qty.disabled = !cb.checked;
-  if(cb.checked && !qty.value){
-    qty.value = currentSupplier.items[i].last;
-    qty.focus();
+  if(cb.checked){
+    qty.style.opacity = '1';
+    qty.style.color = 'var(--text)';
+    if(!qty.value) qty.value = currentSupplier.items[i].last;
+    row.style.borderColor = 'var(--accent)';
+    row.style.background = 'rgba(255,107,53,.08)';
+  } else {
+    qty.style.opacity = '.5';
+    qty.style.color = 'var(--text-dim)';
+    row.style.borderColor = 'var(--border)';
+    row.style.background = 'var(--bg-card)';
   }
   updateOrderTotals();
 }
