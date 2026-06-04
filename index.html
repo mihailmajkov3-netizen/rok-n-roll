@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Rok-n-Roll">
-<title>Rok-n-Roll · Касса</title>
+<title>Rok-n-Roll · Касса и кабинет</title>
 <style>
   *,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
   :root{
@@ -192,17 +192,493 @@
 
   /* Generic */
   .pill{display:inline-block;padding:4px 10px;background:var(--bg-elev);border-radius:8px;font-size:12px;color:var(--text-dim)}
+
+  /* === ВЛАДЕЛЬЦА КАБИНЕТ === */
+  .owner-app{display:none;flex:1;flex-direction:column;height:100vh;height:100dvh;background:var(--bg)}
+  .owner-app.active{display:flex}
+  body.owner .screen{display:none !important}
+  body.owner .owner-app{display:flex}
+
+  .owner-header{padding:14px 20px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0}
+  .owner-header .brand{font-weight:700;font-size:17px}
+  .owner-header .ctx{font-size:12px;color:var(--text-dim)}
+  .role-switcher{display:flex;gap:6px;background:var(--bg-elev);padding:4px;border-radius:10px}
+  .role-switcher button{padding:8px 14px;border:none;background:none;color:var(--text-dim);border-radius:7px;font-size:13px;font-weight:600;cursor:pointer}
+  .role-switcher button.active{background:var(--accent);color:#fff}
+
+  .owner-body{flex:1;display:flex;overflow:hidden}
+  .owner-sidebar{width:220px;background:var(--bg-card);border-right:1px solid var(--border);overflow-y:auto;padding:10px;flex-shrink:0}
+  .owner-sidebar button{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;background:none;border:none;color:var(--text);border-radius:10px;font-size:14px;text-align:left;cursor:pointer;margin-bottom:4px}
+  .owner-sidebar button:hover{background:var(--bg-elev)}
+  .owner-sidebar button.active{background:var(--accent);color:#fff}
+  .owner-sidebar .sec-label{font-size:11px;color:var(--text-dim);padding:14px 14px 6px;text-transform:uppercase;letter-spacing:.5px}
+
+  .owner-content{flex:1;overflow-y:auto;padding:20px}
+  .owner-tab{display:none}
+  .owner-tab.active{display:block}
+
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px}
+  .kpi-card{padding:16px;background:var(--bg-card);border:1px solid var(--border);border-radius:14px}
+  .kpi-card .label{font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+  .kpi-card .value{font-size:26px;font-weight:700}
+  .kpi-card .sub{font-size:12px;color:var(--text-dim);margin-top:4px}
+  .kpi-card .sub.up{color:var(--green)}
+  .kpi-card .sub.down{color:var(--red)}
+
+  .panel{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:16px}
+  .panel-h{font-size:16px;font-weight:600;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+  .panel-h .more{font-size:12px;color:var(--text-dim);cursor:pointer}
+
+  .chart{display:flex;align-items:flex-end;gap:8px;height:140px;padding:10px 0}
+  .chart .bar{flex:1;background:linear-gradient(180deg,var(--accent),var(--accent2));border-radius:6px 6px 0 0;position:relative;min-height:8px;display:flex;align-items:flex-end;justify-content:center}
+  .chart .bar.today{background:linear-gradient(180deg,#4caf50,#388e3c)}
+  .chart .bar-label{position:absolute;bottom:-22px;font-size:11px;color:var(--text-dim);text-align:center;width:100%}
+  .chart .bar-value{position:absolute;top:-18px;font-size:10px;color:var(--text-dim);font-weight:600;text-align:center;width:100%}
+
+  .alerts-list{display:flex;flex-direction:column;gap:8px}
+  .alert{padding:12px 14px;border-radius:10px;display:flex;align-items:center;gap:10px;font-size:14px}
+  .alert.danger{background:rgba(244,67,54,.15);border:1px solid rgba(244,67,54,.3)}
+  .alert.warn{background:rgba(255,152,0,.15);border:1px solid rgba(255,152,0,.3)}
+  .alert.info{background:rgba(33,150,243,.15);border:1px solid rgba(33,150,243,.3)}
+  .alert .ico{font-size:18px}
+  .alert .txt{flex:1}
+  .alert .act{padding:6px 12px;background:var(--bg-elev);border:none;border-radius:6px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer}
+
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .top-list{display:flex;flex-direction:column;gap:6px}
+  .top-row{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg-elev);border-radius:8px;font-size:13px}
+  .top-row .rank{font-weight:700;color:var(--text-dim);min-width:20px}
+  .top-row .name{flex:1}
+  .top-row .qty{color:var(--text-dim);font-size:12px;min-width:50px}
+  .top-row .amount{font-weight:600;color:var(--accent);min-width:70px;text-align:right}
+
+  .data-table{width:100%;border-collapse:collapse;font-size:13px}
+  .data-table th{padding:10px 8px;text-align:left;color:var(--text-dim);font-weight:500;font-size:11px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+  .data-table td{padding:10px 8px;border-bottom:1px solid var(--bg-elev)}
+  .data-table td.right{text-align:right;font-weight:600}
+  .data-table tr:hover{background:var(--bg-elev)}
+  .ind{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+
+  .staff-card{padding:16px;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;margin-bottom:12px}
+  .staff-card .head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+  .staff-card .avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+  .staff-card .nm{flex:1;font-size:15px;font-weight:600}
+  .staff-card .sum{font-size:22px;font-weight:700;color:var(--accent)}
+  .staff-card .breakdown{font-size:13px;color:var(--text-dim);line-height:1.6}
+  .staff-card .breakdown b{color:var(--text);font-weight:600}
+
+  /* Owner mobile */
+  @media (max-width: 760px){
+    .owner-body{flex-direction:column}
+    .owner-sidebar{width:auto;height:auto;display:flex;overflow-x:auto;padding:8px;gap:6px;border-right:none;border-bottom:1px solid var(--border)}
+    .owner-sidebar .sec-label{display:none}
+    .owner-sidebar button{margin-bottom:0;white-space:nowrap;padding:8px 12px;font-size:12px}
+    .owner-content{padding:14px}
+    .two-col{grid-template-columns:1fr}
+    .kpi-card .value{font-size:22px}
+    .data-table{font-size:12px}
+    .data-table th,.data-table td{padding:8px 4px}
+  }
 </style>
 </head>
 <body>
 
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- ═══════════════ КАБИНЕТ ВЛАДЕЛЬЦА (отдельный режим) ═══════════ -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="owner-app">
+  <div class="owner-header">
+    <div>
+      <div class="brand">🍣 Rok-n-Roll · Кабинет</div>
+      <div class="ctx">Михаил · суперадмин · 1 точка</div>
+    </div>
+    <div class="role-switcher">
+      <button onclick="setMode('pos')">📱 Касса</button>
+      <button class="active" onclick="setMode('owner')">📊 Кабинет</button>
+    </div>
+  </div>
+
+  <div class="owner-body">
+    <div class="owner-sidebar">
+      <div class="sec-label">Обзор</div>
+      <button class="active" onclick="ownerTab('dashboard',this)">📊 Дашборд</button>
+      <button onclick="ownerTab('checks',this)">📋 Чеки</button>
+      <button onclick="ownerTab('analytics',this)">📈 Аналитика</button>
+      <div class="sec-label">Управление</div>
+      <button onclick="ownerTab('stock',this)">📦 Остатки</button>
+      <button onclick="ownerTab('revisions',this)">🧾 Ревизии</button>
+      <button onclick="ownerTab('menu',this)">🍱 Меню</button>
+      <button onclick="ownerTab('staff',this)">👥 Сотрудники</button>
+      <div class="sec-label">Прочее</div>
+      <button onclick="ownerTab('settings',this)">⚙ Настройки</button>
+    </div>
+
+    <div class="owner-content">
+
+      <!-- ═══════════ ДАШБОРД ═══════════ -->
+      <div class="owner-tab active" id="ow-dashboard">
+        <h1 style="margin-bottom:14px;font-size:22px">Сегодня · 3 июня · 20:30</h1>
+
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="label">💰 Выручка</div>
+            <div class="value">18 240 ₽</div>
+            <div class="sub up">+12% к среднему за неделю</div>
+          </div>
+          <div class="kpi-card">
+            <div class="label">📋 Чеки</div>
+            <div class="value">12</div>
+            <div class="sub">средний 1 520 ₽</div>
+          </div>
+          <div class="kpi-card">
+            <div class="label">💸 Фудкост</div>
+            <div class="value">25.2%</div>
+            <div class="sub">норма 25% · +0.2 п.п.</div>
+          </div>
+          <div class="kpi-card">
+            <div class="label">📦 Маржа</div>
+            <div class="value">13 638 ₽</div>
+            <div class="sub up">74.8%</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-h">📊 Выручка за 7 дней <span class="more">смотреть месяц →</span></div>
+          <div class="chart">
+            <div class="bar" style="height:42%"><div class="bar-label">28 май</div><div class="bar-value">15 200</div></div>
+            <div class="bar" style="height:58%"><div class="bar-label">29 май</div><div class="bar-value">19 100</div></div>
+            <div class="bar" style="height:72%"><div class="bar-label">30 май</div><div class="bar-value">24 800</div></div>
+            <div class="bar" style="height:38%"><div class="bar-label">31 май</div><div class="bar-value">12 800</div></div>
+            <div class="bar" style="height:65%"><div class="bar-label">1 июн</div><div class="bar-value">21 400</div></div>
+            <div class="bar" style="height:48%"><div class="bar-label">2 июн</div><div class="bar-value">16 200</div></div>
+            <div class="bar today" style="height:54%"><div class="bar-label">3 июн</div><div class="bar-value">18 240</div></div>
+          </div>
+          <div style="margin-top:30px;display:flex;justify-content:space-between;font-size:13px;color:var(--text-dim)">
+            <span>Средняя выручка: <b style="color:var(--text)">18 257 ₽/день</b></span>
+            <span>Месяц: <b style="color:var(--text)">587 906 ₽</b></span>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-h">🚨 Алерты <span class="more">3 активных</span></div>
+          <div class="alerts-list">
+            <div class="alert danger">
+              <span class="ico">🔴</span>
+              <span class="txt"><b>Лосось (филе внутрянка)</b> — осталось 0.16 кг. Хватит на 2-3 заказа.</span>
+              <button class="act">Заказать</button>
+            </div>
+            <div class="alert warn">
+              <span class="ico">⚠</span>
+              <span class="txt"><b>Креветки варёные</b> — осталось 0.88 кг.</span>
+              <button class="act">Запланировать</button>
+            </div>
+            <div class="alert info">
+              <span class="ico">📅</span>
+              <span class="txt">Прошло 14 дней с последней ревизии (30 мая). Пора провести следующую.</span>
+              <button class="act">Запланировать</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-h">🏆 Топ-5 блюд сегодня</div>
+            <div class="top-list">
+              <div class="top-row"><span class="rank">1</span><span class="name">Шаурма классическая</span><span class="qty">6 шт</span><span class="amount">1 680 ₽</span></div>
+              <div class="top-row"><span class="rank">2</span><span class="name">Филадельфия</span><span class="qty">3 шт</span><span class="amount">1 380 ₽</span></div>
+              <div class="top-row"><span class="rank">3</span><span class="name">Майкофф (сет)</span><span class="qty">1 шт</span><span class="amount">3 155 ₽</span></div>
+              <div class="top-row"><span class="rank">4</span><span class="name">Лава</span><span class="qty">2 шт</span><span class="amount">698 ₽</span></div>
+              <div class="top-row"><span class="rank">5</span><span class="name">Шанхай</span><span class="qty">2 шт</span><span class="amount">670 ₽</span></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-h">🛑 Не продавалось 7+ дней</div>
+            <div class="top-list">
+              <div class="top-row"><span class="rank">×</span><span class="name">Чай чёрный 0.5л</span><span class="qty">0</span><span class="amount" style="color:var(--red)">убрать?</span></div>
+              <div class="top-row"><span class="rank">×</span><span class="name">Кисло-сладкий соус</span><span class="qty">0</span><span class="amount" style="color:var(--red)">убрать?</span></div>
+              <div class="top-row"><span class="rank">×</span><span class="name">Сырный маки</span><span class="qty">1</span><span class="amount" style="color:var(--red)">фудкост 41%</span></div>
+              <div class="top-row"><span class="rank">×</span><span class="name">Каппа маки</span><span class="qty">2</span><span class="amount">пересмотреть</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ ЧЕКИ ═══════════ -->
+      <div class="owner-tab" id="ow-checks">
+        <h1 style="margin-bottom:14px;font-size:22px">Чеки</h1>
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+          <select style="padding:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text)">
+            <option>Сегодня</option><option>Вчера</option><option>Неделя</option><option>Месяц</option>
+          </select>
+          <select style="padding:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text)">
+            <option>Все типы</option><option>Доставка</option><option>Самовывоз</option><option>В зале</option>
+          </select>
+          <select style="padding:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text)">
+            <option>Все сотрудники</option><option>Лариса</option><option>Алия</option><option>Лена</option><option>Алевтина</option>
+          </select>
+        </div>
+
+        <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="kpi-card"><div class="label">Доставка</div><div class="value">7</div><div class="sub">11 200 ₽ · 61%</div></div>
+          <div class="kpi-card"><div class="label">Самовывоз</div><div class="value">3</div><div class="sub">4 200 ₽ · 23%</div></div>
+          <div class="kpi-card"><div class="label">В зале</div><div class="value">2</div><div class="sub">2 840 ₽ · 16%</div></div>
+        </div>
+
+        <div class="panel">
+          <table class="data-table">
+            <thead><tr><th>Время</th><th>№</th><th>Тип</th><th>Кто катал</th><th class="right">Сумма</th><th>Оплата</th></tr></thead>
+            <tbody>
+              <tr><td>18:30</td><td>#1493</td><td>🚚 Ленина 12</td><td>Лена + Алевтина</td><td class="right">1 020 ₽</td><td>💵</td></tr>
+              <tr><td>18:15</td><td>#1492</td><td>🏪 Самовывоз</td><td>Алия + Алевтина</td><td class="right">780 ₽</td><td>💳</td></tr>
+              <tr><td>18:00</td><td>#1491</td><td>🍽 Стол 2 ⌛</td><td>Лариса + Алия</td><td class="right">3 690 ₽</td><td>⌛</td></tr>
+              <tr><td>17:42</td><td>#1490</td><td>🚚 Советская 4</td><td>Лариса + Алия + Ал.</td><td class="right">3 250 ₽</td><td>💵</td></tr>
+              <tr><td>16:55</td><td>#1489</td><td>🏪 Самовывоз</td><td>Лариса + Лена + Ал.</td><td class="right">2 100 ₽</td><td>💳</td></tr>
+              <tr><td>15:30</td><td>#1488</td><td>🚚 Космонавтов 8</td><td>Алевтина</td><td class="right">1 460 ₽</td><td>💵</td></tr>
+              <tr><td>14:15</td><td>#1487</td><td>🍽 Стол 1</td><td>Лариса + Лена + Ал.</td><td class="right">2 480 ₽</td><td>💳</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══════════ АНАЛИТИКА ═══════════ -->
+      <div class="owner-tab" id="ow-analytics">
+        <h1 style="margin-bottom:14px;font-size:22px">Аналитика меню</h1>
+        <div class="panel">
+          <div class="panel-h">🏆 ABC-категория A (топ 20% дают 80% выручки) <span class="more">Май 2026</span></div>
+          <table class="data-table">
+            <thead><tr><th>#</th><th>Блюдо</th><th class="right">Продаж</th><th class="right">Выручка</th><th class="right">Фудкост</th><th class="right">Маржа</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td><span class="ind" style="background:#4caf50"></span>Шаурма классическая</td><td class="right">410</td><td class="right">114 800 ₽</td><td class="right">31%</td><td class="right" style="color:var(--green)">78 920 ₽</td></tr>
+              <tr><td>2</td><td><span class="ind" style="background:#4caf50"></span>Майкофф (сет)</td><td class="right">19</td><td class="right">59 945 ₽</td><td class="right">20%</td><td class="right" style="color:var(--green)">48 100 ₽</td></tr>
+              <tr><td>3</td><td><span class="ind" style="background:#4caf50"></span>Мумий тролль (сет)</td><td class="right">16</td><td class="right">31 984 ₽</td><td class="right">23%</td><td class="right" style="color:var(--green)">24 660 ₽</td></tr>
+              <tr><td>4</td><td><span class="ind" style="background:#4caf50"></span>Филадельфия</td><td class="right">34</td><td class="right">15 640 ₽</td><td class="right">28%</td><td class="right">11 280 ₽</td></tr>
+              <tr><td>5</td><td><span class="ind" style="background:#4caf50"></span>Острая шаурма</td><td class="right">52</td><td class="right">15 600 ₽</td><td class="right">29%</td><td class="right">11 100 ₽</td></tr>
+              <tr><td>6</td><td><span class="ind" style="background:#ff9800"></span>Лава</td><td class="right">28</td><td class="right">9 772 ₽</td><td class="right">33%</td><td class="right">6 550 ₽</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <div class="panel-h">⚠ Категория C — низкие продажи или низкая маржа</div>
+          <table class="data-table">
+            <thead><tr><th>Блюдо</th><th class="right">Продаж</th><th class="right">Маржа</th><th>Рекомендация</th></tr></thead>
+            <tbody>
+              <tr><td><span class="ind" style="background:var(--red)"></span>Сырный маки</td><td class="right">1</td><td class="right" style="color:var(--red)">фудкост 41%</td><td>Снять с меню</td></tr>
+              <tr><td><span class="ind" style="background:var(--red)"></span>Томатный соус (доп)</td><td class="right">2</td><td class="right" style="color:var(--red)">фудкост 35%</td><td>Поднять цену</td></tr>
+              <tr><td><span class="ind" style="background:var(--red)"></span>Чай чёрный 0.5л</td><td class="right">0</td><td class="right">—</td><td>Снять</td></tr>
+              <tr><td><span class="ind" style="background:#ff9800"></span>Каппа маки</td><td class="right">2</td><td class="right">38%</td><td>Пересмотреть</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══════════ ОСТАТКИ ═══════════ -->
+      <div class="owner-tab" id="ow-stock">
+        <h1 style="margin-bottom:14px;font-size:22px">Остатки</h1>
+        <div class="panel">
+          <div class="panel-h">🔴 Заканчивается (3)</div>
+          <div class="stock-list">
+            <div class="stock-row warn"><span class="sname">Лосось (филе внутрянка)</span><span class="squty">0.16 кг</span></div>
+            <div class="stock-row warn"><span class="sname">Креветки варёные</span><span class="squty">0.88 кг</span></div>
+            <div class="stock-row warn"><span class="sname">Лаваш</span><span class="squty">37 шт</span></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-h">📦 Полный список</div>
+          <div style="color:var(--text-dim);text-align:center;padding:30px">169 позиций · открыть полный список →</div>
+        </div>
+      </div>
+
+      <!-- ═══════════ РЕВИЗИИ ═══════════ -->
+      <div class="owner-tab" id="ow-revisions">
+        <h1 style="margin-bottom:14px;font-size:22px">Ревизии</h1>
+        <div class="panel">
+          <div class="panel-h">📊 Месячный отчёт (2-30 мая) <span class="more">скачать PDF →</span></div>
+          <div class="kpi-grid" style="grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
+            <div class="kpi-card"><div class="label">Выручка</div><div class="value">589 906 ₽</div></div>
+            <div class="kpi-card"><div class="label">Закупки</div><div class="value">174 072 ₽</div></div>
+            <div class="kpi-card"><div class="label">Должно по тех.карте</div><div class="value">146 946 ₽</div></div>
+            <div class="kpi-card"><div class="label">Реально израсходовано</div><div class="value">141 921 ₽</div></div>
+          </div>
+          <div class="alert info" style="font-size:15px"><span class="ico">✅</span><span class="txt"><b>Разница −5 025 ₽ (излишек)</b>. Бар работает строже норм. Фудкост 24.1%, ниже теоретического 24.9%. Это идеальный режим.</span></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-h">📌 TOP-5 управляемых потерь</div>
+          <table class="data-table">
+            <thead><tr><th>Позиция</th><th class="right">Расход</th><th class="right">Стоимость</th><th>Тип</th></tr></thead>
+            <tbody>
+              <tr><td>Лосось (туша)</td><td class="right">−5 163 г</td><td class="right">−6 676 ₽</td><td>Разделочные (норма)</td></tr>
+              <tr><td>Лаваш</td><td class="right">−40 шт</td><td class="right">−1 480 ₽</td><td>Половинки выбрасываются</td></tr>
+              <tr><td>Масло фритюрное</td><td class="right">−18.4 кг</td><td class="right">−2 933 ₽</td><td>Угар (норма)</td></tr>
+              <tr><td>Помидор свежий</td><td class="right">−4.8 кг</td><td class="right">−954 ₽</td><td>Нарезка / отходы</td></tr>
+              <tr><td>Коробка для пиццы</td><td class="right">−34 шт</td><td class="right">−762 ₽</td><td>Бумажный артефакт (поправлено)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <div class="panel-h">📅 История ревизий</div>
+          <div class="top-list">
+            <div class="top-row"><span class="rank">3</span><span class="name">30 мая 2026</span><span class="qty">99 позиций</span><span class="amount" style="color:var(--green)">+излишек</span></div>
+            <div class="top-row"><span class="rank">2</span><span class="name">16 мая 2026</span><span class="qty">115 позиций</span><span class="amount">−6 583 ₽</span></div>
+            <div class="top-row"><span class="rank">1</span><span class="name">2 мая 2026</span><span class="qty">110 позиций</span><span class="amount">−11 934 ₽</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ МЕНЮ ═══════════ -->
+      <div class="owner-tab" id="ow-menu">
+        <h1 style="margin-bottom:14px;font-size:22px">Меню · 96 блюд</h1>
+        <div class="panel">
+          <div class="panel-h">Категории</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <div class="pill">Сеты · 16</div>
+            <div class="pill">Холодные роллы · 20</div>
+            <div class="pill">Запечённые · 16</div>
+            <div class="pill">Жареные · 13</div>
+            <div class="pill">Простые · 7</div>
+            <div class="pill">Пиццы · 9</div>
+            <div class="pill">Шаурма · 2</div>
+            <div class="pill">Допы · 7</div>
+            <div class="pill">Напитки · 5</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-h">Блюда (показ топ-10)</div>
+          <table class="data-table">
+            <thead><tr><th>Блюдо</th><th>Категория</th><th class="right">Цена</th><th class="right">ССС</th><th class="right">Фудкост</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>Шаурма классическая</td><td>шаурма</td><td class="right">280 ₽</td><td class="right">87 ₽</td><td class="right">31%</td><td>⋮</td></tr>
+              <tr><td>Филадельфия</td><td>холодные</td><td class="right">460 ₽</td><td class="right">130 ₽</td><td class="right">28%</td><td>⋮</td></tr>
+              <tr><td>Филадельфия классич.</td><td>холодные</td><td class="right">585 ₽</td><td class="right">170 ₽</td><td class="right">29%</td><td>⋮</td></tr>
+              <tr><td>Майкофф (сет)</td><td>сеты</td><td class="right">3 155 ₽</td><td class="right">624 ₽</td><td class="right">20%</td><td>⋮</td></tr>
+              <tr><td>Шанхай</td><td>холодные</td><td class="right">335 ₽</td><td class="right">88 ₽</td><td class="right">26%</td><td>⋮</td></tr>
+              <tr><td>Аляска</td><td>холодные</td><td class="right">317 ₽</td><td class="right">95 ₽</td><td class="right">30%</td><td>⋮</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══════════ СОТРУДНИКИ ═══════════ -->
+      <div class="owner-tab" id="ow-staff">
+        <h1 style="margin-bottom:6px;font-size:22px">Сотрудники · Май 2026</h1>
+        <div style="color:var(--text-dim);font-size:13px;margin-bottom:14px">
+          Формула: сушисты 600 ₽/смена + 8% от выручки своих блюд (в паре 8% делится пополам).
+          Лариса 1500 ₽/выход. Ирина 500 ₽/смена. Заготовщица 1000 ₽/выход.
+        </div>
+
+        <div class="staff-card">
+          <div class="head">
+            <div class="avatar" style="background:#2196f3">Л</div>
+            <div class="nm">Лариса <span class="pill" style="margin-left:6px">пицца + катка</span></div>
+            <div class="sum">52 500 ₽</div>
+          </div>
+          <div class="breakdown">
+            Смен: <b>35</b> × 1 500 ₽ = <b>52 500 ₽</b><br>
+            Произвела: 51 пицца + 38 совместных заказов (Лариса/Алия) + 42 совместных (Лариса/Лена)<br>
+            Топ блюд: Чикен (10), Пеперони (11), Дон бекон (8)
+          </div>
+        </div>
+
+        <div class="staff-card">
+          <div class="head">
+            <div class="avatar" style="background:#9c27b0">А</div>
+            <div class="nm">Алевтина <span class="pill" style="margin-left:6px">шаурма + напитки</span></div>
+            <div class="sum">31 400 ₽</div>
+          </div>
+          <div class="breakdown">
+            Смен: <b>28</b> × 600 ₽ = 16 800 ₽ + 8% × 182 500 ₽ выручка = <b>14 600 ₽</b><br>
+            Произвела: 420 шаурм + 32 коктейля + 8 напитков<br>
+            Топ блюд: Шаурма классическая (288), Острая шаурма (52)
+          </div>
+        </div>
+
+        <div class="staff-card">
+          <div class="head">
+            <div class="avatar" style="background:#4caf50">Л</div>
+            <div class="nm">Лена <span class="pill" style="margin-left:6px">сушист</span></div>
+            <div class="sum">24 880 ₽</div>
+          </div>
+          <div class="breakdown">
+            Смен: <b>22</b> × 600 ₽ = 13 200 ₽ + 8% × 145 980 ₽ = <b>11 680 ₽</b><br>
+            Произвела соло: 96 роллов · 78 460 ₽<br>
+            Произвела в паре: 42 заказа на 81 400 ₽ → 8%/2 = доп. 3 256 ₽
+          </div>
+        </div>
+
+        <div class="staff-card">
+          <div class="head">
+            <div class="avatar" style="background:#ff9800">А</div>
+            <div class="nm">Алия <span class="pill" style="margin-left:6px">сушист</span></div>
+            <div class="sum">22 240 ₽</div>
+          </div>
+          <div class="breakdown">
+            Смен: <b>20</b> × 600 ₽ = 12 000 ₽ + 8% × 128 000 ₽ = <b>10 240 ₽</b><br>
+            Произвела соло: 84 ролла · 65 800 ₽<br>
+            Произвела в паре: 38 заказов на 76 200 ₽
+          </div>
+        </div>
+
+        <div class="staff-card">
+          <div class="head">
+            <div class="avatar" style="background:#666">И</div>
+            <div class="nm">Ирина <span class="pill" style="margin-left:6px">уборка</span></div>
+            <div class="sum">15 000 ₽</div>
+          </div>
+          <div class="breakdown">
+            Смен: <b>30</b> × 500 ₽ = <b>15 000 ₽</b>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:18px">
+          <div class="panel-h">💰 Итого зарплата за май</div>
+          <div style="font-size:32px;font-weight:700;color:var(--accent)">146 020 ₽</div>
+          <div style="color:var(--text-dim);margin-top:6px">24.7% от выручки 589 906 ₽</div>
+        </div>
+      </div>
+
+      <!-- ═══════════ НАСТРОЙКИ ═══════════ -->
+      <div class="owner-tab" id="ow-settings">
+        <h1 style="margin-bottom:14px;font-size:22px">Настройки</h1>
+        <div class="panel">
+          <div class="panel-h">🏢 Заведение</div>
+          <div style="line-height:2;font-size:14px">
+            <div><span style="color:var(--text-dim)">Название:</span> <b>Rok-n-Roll</b></div>
+            <div><span style="color:var(--text-dim)">Адрес:</span> Бреды, Челябинская обл.</div>
+            <div><span style="color:var(--text-dim)">Тариф:</span> Suped admin (пилот, бесплатно)</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-h">👤 Пользователи (2)</div>
+          <div style="line-height:2;font-size:14px">
+            <div>👨 Михаил — суперадмин</div>
+            <div>👩 Мама (Лариса) — менеджер / касса</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-h">🔌 Интеграции</div>
+          <div style="line-height:2;font-size:14px;color:var(--text-dim)">
+            ☐ Restik (импорт меню) — последний 30.05<br>
+            ☐ Эвотор (фискализация) — не подключено<br>
+            ☐ Wolt (агрегатор) — не подключено<br>
+            ☐ Telegram-бот — не подключено
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ КНОПКА В ШАПКЕ ОБЫЧНОГО РЕЖИМА — открыть кабинет ═══════════ -->
 <!-- ═══════════ ГЛАВНАЯ ═══════════ -->
 <div class="screen active" id="home">
   <div class="header">
-    <div style="font-size:20px">☰</div>
+    <button class="back" onclick="setMode('owner')" title="Кабинет">📊</button>
     <div style="flex:1">
       <h1>Rok-n-Roll</h1>
-      <div class="header-sub">3 июня · среда</div>
+      <div class="header-sub">3 июня · среда · Касса</div>
     </div>
     <div class="badge green">🟢 онлайн</div>
   </div>
@@ -221,6 +697,26 @@
       <div class="title">ЧЕКИ ДНЯ</div>
       <div class="sub">12 за сегодня</div>
     </div>
+    <div class="home-tile" onclick="show('purchase')">
+      <div class="ico">📥</div>
+      <div class="title">ПРИХОД</div>
+      <div class="sub">поставщик привёз</div>
+    </div>
+    <div class="home-tile" onclick="show('production')">
+      <div class="ico">🍯</div>
+      <div class="title">ПРОИЗВОДСТВО</div>
+      <div class="sub">сделали соус / п/ф</div>
+    </div>
+    <div class="home-tile" onclick="show('writeoff')">
+      <div class="ico">➖</div>
+      <div class="title">СПИСАНИЕ</div>
+      <div class="sub">брак / угощение</div>
+    </div>
+    <div class="home-tile" onclick="show('orders')">
+      <div class="ico">📨</div>
+      <div class="title">ЗАЯВКИ</div>
+      <div class="sub">поставщикам</div>
+    </div>
     <div class="home-tile" onclick="show('stock')">
       <div class="ico">📦</div>
       <div class="title">ОСТАТКИ</div>
@@ -230,6 +726,11 @@
       <div class="ico">📊</div>
       <div class="title">РЕВИЗИЯ</div>
       <div class="sub">последняя 30.05</div>
+    </div>
+    <div class="home-tile" onclick="setMode('owner')">
+      <div class="ico">👔</div>
+      <div class="title">КАБИНЕТ</div>
+      <div class="sub">аналитика, отчёты</div>
     </div>
   </div>
 </div>
@@ -432,60 +933,12 @@
       <div class="header-sub">3 июня · 12 чеков</div>
     </div>
   </div>
-  <div class="receipts-list">
+  <div class="receipts-list" id="receiptsList">
     <div class="receipts-summary">
       <div class="big">18 240 ₽</div>
       <div class="sub">12 чеков · средний 1 520 ₽</div>
     </div>
-    <div class="receipt-card">
-      <span class="time">18:30</span>
-      <span class="num">#1493</span>
-      <div class="info">🚚 Ленина 12</div>
-      <span class="amount">1 020 ₽</span>
-      <span class="pay-mark">💵</span>
-    </div>
-    <div class="receipt-card">
-      <span class="time">18:15</span>
-      <span class="num">#1492</span>
-      <div class="info">🏪 Самовывоз</div>
-      <span class="amount">780 ₽</span>
-      <span class="pay-mark">💳</span>
-    </div>
-    <div class="receipt-card">
-      <span class="time">18:00</span>
-      <span class="num">#1491</span>
-      <div class="info">🍽 Стол 2 · открыт</div>
-      <span class="amount">3 690 ₽</span>
-      <span class="pay-mark">⌛</span>
-    </div>
-    <div class="receipt-card">
-      <span class="time">17:42</span>
-      <span class="num">#1490</span>
-      <div class="info">🚚 Советская 4</div>
-      <span class="amount">3 250 ₽</span>
-      <span class="pay-mark">💵</span>
-    </div>
-    <div class="receipt-card">
-      <span class="time">16:55</span>
-      <span class="num">#1489</span>
-      <div class="info">🏪 Самовывоз</div>
-      <span class="amount">2 100 ₽</span>
-      <span class="pay-mark">💳</span>
-    </div>
-    <div class="receipt-card">
-      <span class="time">15:30</span>
-      <span class="num">#1488</span>
-      <div class="info">🚚 Космонавтов 8</div>
-      <span class="amount">1 460 ₽</span>
-      <span class="pay-mark">💵</span>
-    </div>
-    <div class="receipt-card">
-      <span class="time">14:15</span>
-      <span class="num">#1487</span>
-      <div class="info">🍽 Стол 1</div>
-      <span class="amount">2 480 ₽</span>
-      <span class="pay-mark">💳</span>
-    </div>
+    <!-- generated by JS -->
   </div>
 </div>
 
@@ -546,35 +999,613 @@
   <div class="stocktake-list" id="stocktakeList"></div>
 </div>
 
-<!-- ═══════════ STAFF MODAL ═══════════ -->
-<div class="modal-bg" id="staffModal">
-  <div class="modal">
-    <h3>Кто делает?</h3>
-    <div class="modal-dish" id="modalDish">Филадельфия · 460 ₽</div>
-    <div class="modal-grid" id="staffGrid">
-      <button class="staff-btn" onclick="pickStaff('Лена')">
-        <span class="dot" style="background:#4caf50">Л</span> Лена
+<!-- ═══════════ DETAIL MODAL (просмотр чека) ═══════════ -->
+<div class="modal-bg" id="detailModal" onclick="if(event.target===this)closeDetail()">
+  <div class="modal" style="max-width:440px;text-align:left;max-height:88vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <h3 id="detailTitle">Чек #1493</h3>
+      <button onclick="closeDetail()" style="background:none;border:none;color:var(--text-dim);font-size:28px;cursor:pointer">×</button>
+    </div>
+    <div id="detailMeta" style="font-size:13px;color:var(--text-dim);margin-bottom:14px;line-height:1.7"></div>
+    <div style="border-top:1px solid var(--border);padding-top:12px;margin-bottom:8px;font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px">Состав заказа</div>
+    <div id="detailItems" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px"></div>
+    <div style="border-top:1px solid var(--border);padding-top:12px;display:flex;justify-content:space-between;align-items:baseline">
+      <span style="color:var(--text-dim);font-size:13px">Итого</span>
+      <span style="font-size:22px;font-weight:700;color:var(--accent)" id="detailTotal">1 020 ₽</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+      <span style="color:var(--text-dim);font-size:13px">Оплата</span>
+      <span id="detailPayment" style="font-size:14px;font-weight:600">💵 Наличные</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ПРИХОД ═══════════ -->
+<div class="screen" id="purchase">
+  <div class="header">
+    <button class="back" onclick="show('home')">←</button>
+    <h1>Приход товара</h1>
+    <button class="back" onclick="alert('Сохранено: 3 поз. на 4 580 ₽')" title="Сохранить">✓</button>
+  </div>
+  <div class="address-form" style="max-width:560px">
+    <div class="field">
+      <label>Поставщик</label>
+      <select id="suppSelect" style="padding:14px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:16px">
+        <option>Пятёрочка</option>
+        <option>Товарный двор</option>
+        <option>Мистер Крабс</option>
+        <option>Шаповалов</option>
+        <option>Ильхом лаваш</option>
+        <option>+ Добавить поставщика</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Дата прихода</label>
+      <input type="text" value="03.06.2026 20:45" style="padding:14px 16px">
+    </div>
+    <div class="field">
+      <label>Сумма по накладной</label>
+      <input id="purchSum" type="text" placeholder="0 ₽" value="4 580 ₽" inputmode="numeric">
+    </div>
+
+    <button class="submit-btn" style="background:var(--bg-elev);color:var(--text);margin:8px 0" onclick="alert('Откроется камера для фото накладной (OCR в следующей версии)')">
+      📷 Сфотографировать накладную
+    </button>
+
+    <div style="margin-top:10px;font-size:13px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px">Позиции прихода</div>
+
+    <div class="receipt-row" style="background:var(--bg-card);padding:14px;border-radius:12px;border:1px solid var(--border)">
+      <div class="rname" style="font-weight:600">Помидор свежий</div>
+      <div class="rqty">2.31</div>
+      <div style="color:var(--text-dim);font-size:12px">кг</div>
+      <div class="rprice">462 ₽</div>
+    </div>
+    <div class="receipt-row" style="background:var(--bg-card);padding:14px;border-radius:12px;border:1px solid var(--border)">
+      <div class="rname" style="font-weight:600">Огурец свежий</div>
+      <div class="rqty">3.59</div>
+      <div style="color:var(--text-dim);font-size:12px">кг</div>
+      <div class="rprice">540 ₽</div>
+    </div>
+    <div class="receipt-row" style="background:var(--bg-card);padding:14px;border-radius:12px;border:1px solid var(--border)">
+      <div class="rname" style="font-weight:600">Молоко</div>
+      <div class="rqty">2</div>
+      <div style="color:var(--text-dim);font-size:12px">л</div>
+      <div class="rprice">210 ₽</div>
+    </div>
+
+    <button class="submit-btn" style="background:var(--bg-elev);color:var(--text)" onclick="alert('Поиск ингредиента')">
+      + Добавить позицию
+    </button>
+
+    <button class="submit-btn" onclick="alert('Приход сохранён: 3 позиции на 4 580 ₽')">
+      ✓ Сохранить приход
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════ ПРОИЗВОДСТВО ═══════════ -->
+<div class="screen" id="production">
+  <div class="header">
+    <button class="back" onclick="show('home')">←</button>
+    <h1>Производство п/ф</h1>
+  </div>
+  <div class="address-form" style="max-width:560px">
+
+    <div style="background:var(--bg-elev);padding:12px 14px;border-radius:10px;font-size:13px;color:var(--text-dim);line-height:1.6">
+      💡 Когда повар приготовил партию полуфабриката (соус, рис на ролл, мясо маринованное и т.д.) — нажми сюда. Система автоматически спишет компоненты по тех.карте.
+    </div>
+
+    <div class="field">
+      <label>Что приготовили</label>
+      <select id="prodSelect" style="padding:14px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:16px" onchange="showRecipePreview()">
+        <option>Соус лава</option>
+        <option>Соус цезарь (шаурма)</option>
+        <option>Соус томатный (шаурма)</option>
+        <option>Соус спайси</option>
+        <option>Сырный соус для запекания</option>
+        <option>Соус для запекания с лососем</option>
+        <option>Соус для шаурмы (острый)</option>
+        <option>Соус цезарь на пиццу</option>
+        <option>Соус томатный для пиццы</option>
+        <option>Мясо маринованное</option>
+        <option>Маринованная курица (шаурма)</option>
+        <option>Рис на ролл</option>
+        <option>Тесто для пиццы</option>
+        <option>Мицукан</option>
+        <option>Васаби</option>
+        <option>Блинчики</option>
+        <option>Лосось (филе солёное)</option>
+        <option>Креветка чистая (для роллов)</option>
+        <option>Капуста белокочанная нашинкованная</option>
+        <option>Морковь свежая нашинкованная</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Сколько изготовили (на выходе)</label>
+      <input id="prodQty" type="text" value="1 000" inputmode="numeric" style="font-size:22px;font-weight:700;text-align:center">
+      <span style="font-size:12px;color:var(--text-dim);align-self:center">граммов</span>
+    </div>
+
+    <div class="field">
+      <label>Кто делал</label>
+      <select style="padding:14px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:16px">
+        <option>1. Лариса</option>
+        <option>2. Алия</option>
+        <option>3. Лена</option>
+        <option selected>4. Алевтина</option>
+        <option>5. Двое</option>
+      </select>
+    </div>
+
+    <div id="recipePreview" style="background:var(--bg-card);border:1px solid var(--accent);border-radius:12px;padding:14px;margin-top:8px">
+      <div style="font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">
+        🔥 Будет автоматически списано
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:14px">
+        <div style="display:flex;justify-content:space-between"><span>Майонез</span><span style="font-weight:600;color:var(--accent)">−250 г</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Сыр творожный</span><span style="font-weight:600;color:var(--accent)">−250 г</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Икра масаго</span><span style="font-weight:600;color:var(--accent)">−15 г</span></div>
+      </div>
+    </div>
+
+    <button class="submit-btn" onclick="alert('Готово: 1 000 г соуса лава в банке. Списано: майонез 250г, сыр творожный 250г, икра масаго 15г.')">
+      ✓ Зафиксировать производство
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════ СПИСАНИЕ ═══════════ -->
+<div class="screen" id="writeoff">
+  <div class="header">
+    <button class="back" onclick="show('home')">←</button>
+    <h1>Списание</h1>
+  </div>
+  <div class="address-form" style="max-width:560px">
+
+    <div style="background:var(--bg-elev);padding:12px 14px;border-radius:10px;font-size:13px;color:var(--text-dim);line-height:1.6">
+      ➖ Списывай сюда брак, угощения, порчу, тренировочные блюда. Это уйдёт со склада, но не попадёт в выручку.
+    </div>
+
+    <div class="field">
+      <label>Что списываем</label>
+      <input type="text" placeholder="Начни вводить название..." style="font-size:16px">
+    </div>
+
+    <div class="field">
+      <label>Количество</label>
+      <input type="text" placeholder="0" inputmode="numeric" style="font-size:22px;font-weight:700;text-align:center">
+      <span style="font-size:12px;color:var(--text-dim);align-self:center">г / кг / шт</span>
+    </div>
+
+    <div class="field">
+      <label>Причина</label>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="type-tile" style="min-height:90px;padding:16px;font-size:14px" onclick="pickReason(this)">
+        <div class="emoji" style="font-size:32px;margin-bottom:4px">🍽</div>
+        <div class="name" style="font-size:13px">Угощение</div>
+      </div>
+      <div class="type-tile" style="min-height:90px;padding:16px" onclick="pickReason(this)">
+        <div class="emoji" style="font-size:32px;margin-bottom:4px">🚫</div>
+        <div class="name" style="font-size:13px">Брак</div>
+      </div>
+      <div class="type-tile" style="min-height:90px;padding:16px" onclick="pickReason(this)">
+        <div class="emoji" style="font-size:32px;margin-bottom:4px">⏰</div>
+        <div class="name" style="font-size:13px">Просрочка</div>
+      </div>
+      <div class="type-tile" style="min-height:90px;padding:16px" onclick="pickReason(this)">
+        <div class="emoji" style="font-size:32px;margin-bottom:4px">🧪</div>
+        <div class="name" style="font-size:13px">Тренинг / проба</div>
+      </div>
+      <div class="type-tile" style="min-height:90px;padding:16px;grid-column:span 2" onclick="pickReason(this)">
+        <div class="emoji" style="font-size:28px;margin-bottom:4px">📝</div>
+        <div class="name" style="font-size:13px">Другое (комментарий)</div>
+      </div>
+    </div>
+
+    <div class="field" style="margin-top:8px">
+      <label>Комментарий (по желанию)</label>
+      <textarea placeholder="Например: уронил тарелку с шаурмой"></textarea>
+    </div>
+
+    <button class="submit-btn" onclick="alert('Списание сохранено')">
+      ✓ Списать
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════ ЗАЯВКИ — список поставщиков ═══════════ -->
+<div class="screen" id="orders">
+  <div class="header">
+    <button class="back" onclick="show('home')">←</button>
+    <h1>Заявки поставщикам</h1>
+  </div>
+  <div style="padding:14px;max-width:560px;width:100%;margin:0 auto">
+
+    <div style="background:var(--bg-elev);padding:12px 14px;border-radius:10px;font-size:13px;color:var(--text-dim);line-height:1.6;margin-bottom:16px">
+      📨 Выбери поставщика — увидишь его постоянный список товаров. Отметь галочки и проставь количество. Один тап «Отправить» — и заявка уходит в Telegram/WhatsApp.
+    </div>
+
+    <div style="font-size:13px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">
+      Шаблоны заявок
+    </div>
+
+    <div class="home-tile" style="margin-bottom:10px;text-align:left;padding:16px 18px;display:flex;align-items:center;gap:14px" onclick="openSupplier('крабс')">
+      <div style="font-size:32px">🦀</div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:16px">Мистер Крабс</div>
+        <div style="font-size:12px;color:var(--text-dim)">30 позиций · крупная заявка раз в неделю</div>
+      </div>
+      <div style="color:var(--accent);font-size:24px">→</div>
+    </div>
+
+    <div class="home-tile" style="margin-bottom:10px;text-align:left;padding:16px 18px;display:flex;align-items:center;gap:14px" onclick="openSupplier('пятёрочка')">
+      <div style="font-size:32px">🛒</div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:16px">Пятёрочка</div>
+        <div style="font-size:12px;color:var(--text-dim)">45 позиций · мелочь через день</div>
+      </div>
+      <div style="color:var(--accent);font-size:24px">→</div>
+    </div>
+
+    <div class="home-tile" style="margin-bottom:10px;text-align:left;padding:16px 18px;display:flex;align-items:center;gap:14px" onclick="openSupplier('товарный')">
+      <div style="font-size:32px">🐟</div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:16px">Товарный двор</div>
+        <div style="font-size:12px;color:var(--text-dim)">2 позиции · лосось + креветка</div>
+      </div>
+      <div style="color:var(--accent);font-size:24px">→</div>
+    </div>
+
+    <div class="home-tile" style="margin-bottom:10px;text-align:left;padding:16px 18px;display:flex;align-items:center;gap:14px" onclick="openSupplier('шаповалов')">
+      <div style="font-size:32px">🍗</div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:16px">Шаповалов</div>
+        <div style="font-size:12px;color:var(--text-dim)">2 позиции · куриная грудка</div>
+      </div>
+      <div style="color:var(--accent);font-size:24px">→</div>
+    </div>
+
+    <div class="home-tile" style="margin-bottom:16px;text-align:left;padding:16px 18px;display:flex;align-items:center;gap:14px" onclick="openSupplier('ильхом')">
+      <div style="font-size:32px">🥬</div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:16px">Ильхом лаваш</div>
+        <div style="font-size:12px;color:var(--text-dim)">6 позиций · лаваш + овощи</div>
+      </div>
+      <div style="color:var(--accent);font-size:24px">→</div>
+    </div>
+
+    <div style="font-size:13px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;margin-top:24px">
+      История заявок
+    </div>
+    <div class="receipt-card" style="margin-bottom:8px">
+      <span class="time">25.05</span>
+      <div class="info">🦀 Мистер Крабс · 21 поз.</div>
+      <span class="amount">22 474 ₽</span>
+      <span class="pay-mark">✅</span>
+    </div>
+    <div class="receipt-card" style="margin-bottom:8px">
+      <span class="time">17.05</span>
+      <div class="info">🥬 Ильхом · 4 поз.</div>
+      <span class="amount">3 867 ₽</span>
+      <span class="pay-mark">✅</span>
+    </div>
+    <div class="receipt-card" style="margin-bottom:8px">
+      <span class="time">13.05</span>
+      <div class="info">🐟 Товарный двор · 2 поз.</div>
+      <span class="amount">17 211 ₽</span>
+      <span class="pay-mark">✅</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ЗАЯВКА — чек-лист ═══════════ -->
+<div class="screen" id="orderForm">
+  <div class="header">
+    <button class="back" onclick="show('orders')">←</button>
+    <h1 id="orderSupplierName">Мистер Крабс</h1>
+    <div class="badge" id="orderCounter">0 выбрано</div>
+  </div>
+  <div style="padding:14px;max-width:560px;width:100%;margin:0 auto">
+
+    <div style="background:var(--bg-elev);padding:10px 14px;border-radius:10px;font-size:12px;color:var(--text-dim);margin-bottom:14px">
+      💡 Отмечай чекбоксом → проставляй количество. Внизу — кнопки отправки.
+    </div>
+
+    <div id="orderItemsList" style="display:flex;flex-direction:column;gap:8px"></div>
+
+    <div class="field" style="margin-top:18px">
+      <label>Комментарий к заявке</label>
+      <textarea id="orderComment" placeholder="Например: привезти до 12:00, обязательно охлаждённое..." style="min-height:60px"></textarea>
+    </div>
+
+    <div style="background:var(--bg-card);padding:14px;border-radius:12px;border:1px solid var(--border);margin-top:14px">
+      <div style="font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Итого по заявке</div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <span id="orderTotal">0 позиций</span>
+        <span style="font-size:20px;font-weight:700;color:var(--accent)" id="orderApprox">~0 ₽</span>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px">
+      <button class="submit-btn" style="background:#0088cc" onclick="sendOrder('telegram')">
+        ✈ Telegram
       </button>
-      <button class="staff-btn" onclick="pickStaff('Алия')">
-        <span class="dot" style="background:#ff9800">А</span> Алия
+      <button class="submit-btn" style="background:#25d366" onclick="sendOrder('whatsapp')">
+        💬 WhatsApp
       </button>
-      <button class="staff-btn" onclick="pickStaff('Алифтина')">
-        <span class="dot" style="background:#9c27b0">А</span> Алифтина
+      <button class="submit-btn" style="background:var(--bg-elev);color:var(--text)" onclick="sendOrder('copy')">
+        📋 Скопировать
       </button>
-      <button class="staff-btn" onclick="pickStaff('Лариса')">
-        <span class="dot" style="background:#2196f3">Л</span> Лариса
-      </button>
-      <button class="staff-btn" onclick="pickStaff('👥 Двое')" style="grid-column:span 2">
-        <span class="dot" style="background:#666">👥</span> Двое (вместе)
-      </button>
-      <button class="staff-btn" onclick="pickStaff(null)" style="grid-column:span 2;color:var(--text-dim)">
-        ⏭ Потом (разберём вечером)
+      <button class="submit-btn" style="background:var(--bg-elev);color:var(--text)" onclick="sendOrder('pdf')">
+        📄 Сохранить PDF
       </button>
     </div>
   </div>
 </div>
 
+<!-- ═══════════ STAFF MODAL ═══════════ -->
+<div class="modal-bg" id="staffModal">
+  <div class="modal">
+    <h3>Кто делает?</h3>
+    <div class="modal-dish" id="modalDish">Филадельфия · 460 ₽</div>
+    <div class="modal-grid" id="staffGrid"><!-- generated by JS --></div>
+  </div>
+</div>
+
 <script>
+// === SUPPLIER ORDERS ===
+const SUPPLIER_TEMPLATES = {
+  'крабс': {
+    name: 'Мистер Крабс',
+    emoji: '🦀',
+    items: [
+      // Часто (топ — что заказывают регулярно)
+      {n:'Майонез', u:'кг', last:20, est:1800},
+      {n:'Моцарелла', u:'кг', last:4, est:1100},
+      {n:'Картошка фри', u:'кг', last:7.5, est:550},
+      {n:'Имбирь розовый', u:'кг', last:2.85, est:1140},
+      {n:'Масло фритюрное', u:'кг', last:10, est:1600},
+      {n:'Нори', u:'шт', last:200, est:2028},
+      {n:'Соусничка 50мл', u:'шт', last:240, est:386},
+      {n:'Пеперони', u:'кг', last:22, est:8800},
+      {n:'Грудка копч', u:'кг', last:3.865, est:2706},
+      {n:'Крабовые палочки вичи', u:'кг', last:3, est:1500},
+      {n:'Икра масаго', u:'кг', last:0.5, est:700},
+      {n:'Рис', u:'кг', last:20, est:2100},
+      {n:'Бекон в/к', u:'кг', last:2, est:1260},
+      {n:'Шрирача', u:'кг', last:0.815, est:945},
+      {n:'Сырные палочки', u:'кг', last:3, est:2400},
+      // Реже
+      {n:'Наггетсы', u:'кг', last:1, est:415},
+      {n:'Сырная лепешка', u:'шт', last:18, est:295},
+      {n:'Форель (обрезь)', u:'кг', last:1, est:850},
+      {n:'Ланч бокс', u:'шт', last:150, est:735},
+      {n:'Крылышки острые в панировке', u:'кг', last:2, est:1800},
+      {n:'Унаги соус', u:'кг', last:1.8, est:2160},
+      {n:'Соевый соус', u:'л', last:20, est:1600},
+      {n:'Ветчина на пиццу', u:'кг', last:1, est:470},
+      {n:'Коробка для пиццы', u:'шт', last:50, est:1121},
+      {n:'Паста томатная', u:'кг', last:5, est:965},
+      {n:'Топпинг клубника', u:'кг', last:1, est:660},
+      {n:'Майонез на маринад', u:'кг', last:10, est:850},
+      {n:'Васаби порошок', u:'кг', last:2, est:1550},
+      {n:'Кимчи', u:'кг', last:1.8, est:790},
+      {n:'Ланч-бокс черный', u:'шт', last:100, est:540},
+    ]
+  },
+  'пятёрочка': {
+    name: 'Пятёрочка',
+    emoji: '🛒',
+    items: [
+      {n:'Помидор свежий', u:'кг', last:3, est:600},
+      {n:'Огурец свежий', u:'кг', last:6, est:900},
+      {n:'Молоко', u:'л', last:2, est:210},
+      {n:'Сок томатный', u:'л', last:2, est:270},
+      {n:'Авокадо', u:'кг', last:0.5, est:550},
+      {n:'Сахар', u:'кг', last:5, est:325},
+      {n:'Соль', u:'кг', last:3, est:90},
+      {n:'Морковь свежая', u:'кг', last:4, est:200},
+      {n:'Перчатки виниловые', u:'упак', last:1, est:200},
+      {n:'Дрожжи', u:'г', last:200, est:120},
+      {n:'Пекинская капуста', u:'кг', last:0.8, est:160},
+      {n:'Белокочанная капуста', u:'кг', last:8, est:400},
+      {n:'Чеснок свежий', u:'кг', last:0.2, est:85},
+      {n:'Укроп свежий', u:'кг', last:0.3, est:180},
+      {n:'Грибы свежие', u:'кг', last:0.5, est:200},
+      {n:'Тарелки картонные', u:'шт', last:50, est:250},
+      {n:'Полотенце бумажное', u:'упак', last:1, est:120},
+      {n:'Моющее для посуды', u:'шт', last:1, est:180},
+      {n:'Мешки для мусора', u:'упак', last:1, est:150},
+    ]
+  },
+  'товарный': {
+    name: 'Товарный двор',
+    emoji: '🐟',
+    items: [
+      {n:'Лосось целый неразделанный', u:'кг', last:9, est:11_135},
+      {n:'Креветка сырая', u:'кг', last:2, est:2300},
+    ]
+  },
+  'шаповалов': {
+    name: 'Шаповалов',
+    emoji: '🍗',
+    items: [
+      {n:'Филе грудки (сырое)', u:'кг', last:35, est:9625},
+      {n:'Грудка сырая', u:'кг', last:25, est:6850},
+    ]
+  },
+  'ильхом': {
+    name: 'Ильхом лаваш',
+    emoji: '🥬',
+    items: [
+      {n:'Лаваш', u:'шт', last:50, est:1850},
+      {n:'Огурец свежий', u:'кг', last:7, est:1050},
+      {n:'Помидор свежий', u:'кг', last:6, est:1200},
+      {n:'Белокочанная капуста', u:'кг', last:5, est:250},
+      {n:'Морковь свежая', u:'кг', last:4, est:200},
+      {n:'Чеснок свежий', u:'кг', last:0.5, est:200},
+    ]
+  },
+};
+
+let currentSupplier = null;
+
+function openSupplier(key){
+  currentSupplier = SUPPLIER_TEMPLATES[key];
+  if(!currentSupplier) return;
+  document.getElementById('orderSupplierName').textContent = `${currentSupplier.emoji} ${currentSupplier.name}`;
+  const list = document.getElementById('orderItemsList');
+  list.innerHTML = currentSupplier.items.map((it,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px" data-idx="${i}">
+      <input type="checkbox" id="oi${i}" onchange="toggleOrderItem(${i},this)" style="width:24px;height:24px;cursor:pointer;accent-color:var(--accent)">
+      <label for="oi${i}" style="flex:1;font-size:14px;cursor:pointer">${it.n}</label>
+      <input type="text" inputmode="decimal" placeholder="${it.last}" disabled
+        style="width:80px;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);text-align:center;font-size:14px;font-weight:600"
+        onchange="updateOrderTotals()">
+      <span style="color:var(--text-dim);font-size:12px;min-width:30px">${it.u}</span>
+    </div>
+  `).join('');
+  document.getElementById('orderComment').value = '';
+  updateOrderTotals();
+  show('orderForm');
+}
+
+function toggleOrderItem(i,cb){
+  const row = cb.closest('[data-idx]');
+  const qty = row.querySelector('input[type=text]');
+  qty.disabled = !cb.checked;
+  if(cb.checked && !qty.value){
+    qty.value = currentSupplier.items[i].last;
+    qty.focus();
+  }
+  updateOrderTotals();
+}
+
+function updateOrderTotals(){
+  const rows = document.querySelectorAll('#orderItemsList [data-idx]');
+  let count = 0, total = 0;
+  rows.forEach(row=>{
+    const cb = row.querySelector('input[type=checkbox]');
+    if(!cb.checked) return;
+    count++;
+    const idx = parseInt(row.dataset.idx);
+    const it = currentSupplier.items[idx];
+    const qty = parseFloat(row.querySelector('input[type=text]').value) || it.last;
+    total += (qty / it.last) * it.est;
+  });
+  document.getElementById('orderCounter').textContent = count + ' выбрано';
+  document.getElementById('orderTotal').textContent = count + ' позиций';
+  document.getElementById('orderApprox').textContent = '~' + Math.round(total).toLocaleString('ru') + ' ₽';
+}
+
+function buildOrderText(){
+  const rows = document.querySelectorAll('#orderItemsList [data-idx]');
+  const items = [];
+  rows.forEach(row=>{
+    const cb = row.querySelector('input[type=checkbox]');
+    if(!cb.checked) return;
+    const idx = parseInt(row.dataset.idx);
+    const it = currentSupplier.items[idx];
+    const qty = row.querySelector('input[type=text]').value || it.last;
+    items.push(`• ${it.n} — ${qty} ${it.u}`);
+  });
+  const comment = document.getElementById('orderComment').value.trim();
+  const date = new Date().toLocaleDateString('ru');
+  return `🍣 Rok-n-Roll · заявка ${date}\n${currentSupplier.emoji} ${currentSupplier.name}\n\n${items.join('\n')}\n${comment?'\nКомментарий: '+comment:''}`;
+}
+
+function sendOrder(method){
+  const txt = buildOrderText();
+  if(!document.querySelectorAll('#orderItemsList input[type=checkbox]:checked').length){
+    alert('Выбери хотя бы одну позицию');
+    return;
+  }
+  if(method==='copy'){
+    navigator.clipboard.writeText(txt).then(()=>{
+      alert('Скопировано в буфер!\nВставь в WhatsApp / Telegram / любой мессенджер.');
+    }).catch(()=>{
+      prompt('Скопируй вручную:', txt);
+    });
+    return;
+  }
+  if(method==='telegram'){
+    const url = 'https://t.me/share/url?url=' + encodeURIComponent(txt);
+    window.open(url, '_blank');
+    return;
+  }
+  if(method==='whatsapp'){
+    const url = 'https://wa.me/?text=' + encodeURIComponent(txt);
+    window.open(url, '_blank');
+    return;
+  }
+  if(method==='pdf'){
+    alert('PDF будет сгенерирован в полной версии (в прототипе — посмотри текст):\n\n'+txt);
+  }
+}
+
+// === WRITE-OFF & PRODUCTION HELPERS ===
+function pickReason(el){
+  document.querySelectorAll('#writeoff .type-tile').forEach(t=>{t.style.borderColor='var(--border)';t.style.background='var(--bg-card)'});
+  el.style.borderColor='var(--accent)';
+  el.style.background='rgba(255,107,53,.15)';
+}
+
+// Recipe presets (упрощённо для прототипа)
+const RECIPES = {
+  'Соус лава': [['Майонез','г',250],['Сыр творожный','г',250],['Икра масаго','г',15]],
+  'Соус цезарь (шаурма)': [['Майонез','г',400],['Чеснок','г',30],['Васаби','г',8]],
+  'Соус томатный (шаурма)': [['Паста томатная','г',400],['Сахар','г',60],['Соль','г',10]],
+  'Соус спайси': [['Майонез','г',500],['Шрирача','г',60]],
+  'Сырный соус для запекания': [['Майонез','г',1500],['Моцарелла','г',450]],
+  'Соус для запекания с лососем': [['Майонез','г',800],['Лосось обрезь','г',200]],
+  'Соус для шаурмы (острый)': [['Майонез','г',400],['Шрирача','г',80]],
+  'Соус цезарь на пиццу': [['Соус цезарь','г',1000]],
+  'Соус томатный для пиццы': [['Паста томатная','г',600],['Сахар','г',40]],
+  'Мясо маринованное': [['Филе грудки (сырое)','г',1000]],
+  'Маринованная курица (шаурма)': [['Мясо маринованное','г',1333]],
+  'Рис на ролл': [['Рис (сырой)','г',693],['Вода','г',736],['Мицукан','г',294]],
+  'Тесто для пиццы': [['Мука','г',1500],['Вода','г',900],['Дрожжи','г',30],['Соль','г',30]],
+  'Мицукан': [['Сахар','г',1500],['Соль','г',500],['Уксус рисовый','г',2500]],
+  'Васаби': [['Васаби порошок','г',500],['Вода','г',500]],
+  'Блинчики': [['Мука','г',400],['Яйца','шт',2],['Молоко','г',500]],
+  'Лосось (филе солёное)': [['Лосось целый','г',1371],['Соль','г',40],['Сахар','г',60]],
+  'Креветка чистая (для роллов)': [['Креветка сырая','г',1465],['Соль','г',29]],
+  'Капуста белокочанная нашинкованная': [['Белокочанная капуста','г',1100]],
+  'Морковь свежая нашинкованная': [['Морковь свежая','г',1100]],
+};
+function showRecipePreview(){
+  const sel = document.getElementById('prodSelect').value;
+  const r = RECIPES[sel] || [];
+  const html = `<div style="font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🔥 Будет автоматически списано</div>
+    <div style="display:flex;flex-direction:column;gap:6px;font-size:14px">
+    ${r.map(([n,u,q])=>`<div style="display:flex;justify-content:space-between"><span>${n}</span><span style="font-weight:600;color:var(--accent)">−${q} ${u}</span></div>`).join('')}
+    </div>`;
+  document.getElementById('recipePreview').innerHTML = html;
+}
+
+// === MODE SWITCHER (POS ↔ Owner) ===
+function setMode(m){
+  document.body.classList.toggle('owner', m==='owner');
+  // sync role-switcher buttons
+  document.querySelectorAll('.role-switcher button').forEach(b=>{
+    b.classList.toggle('active', (m==='owner' && b.textContent.includes('Кабинет')) || (m==='pos' && b.textContent.includes('Касса')));
+  });
+  if(m==='pos'){
+    // return to home of POS
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('home').classList.add('active');
+  }
+}
+function ownerTab(name, btn){
+  document.querySelectorAll('.owner-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('ow-'+name).classList.add('active');
+  document.querySelectorAll('.owner-sidebar button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelector('.owner-content').scrollTo({top:0,behavior:'smooth'});
+}
+
 // === STATE ===
 let phone = '';
 let orderType = null;     // 'pickup' | 'delivery' | 'table'
@@ -683,23 +1714,25 @@ function goPOS(){
 }
 
 // === ADD DISH ===
+// Все 7 опций "кто катает" (полный список как в Restik у мамы)
+const STAFF_OPTIONS = [
+  {n:'1. Лариса',           color:'#2196f3', letter:'Л'},
+  {n:'2. Алия',             color:'#ff9800', letter:'А'},
+  {n:'3. Лена',             color:'#4caf50', letter:'Л'},
+  {n:'4. Алевтина',         color:'#9c27b0', letter:'А'},
+  {n:'5. Двое',             color:'#666',    letter:'👥'},
+  {n:'6. Лариса / Лена',    color:'linear-gradient(135deg,#2196f3,#4caf50)', letter:'ЛЛ'},
+  {n:'7. Лариса / Алия',    color:'linear-gradient(135deg,#2196f3,#ff9800)', letter:'ЛА'},
+];
+
 function addDish(d){
   pendingDish = d;
   document.getElementById('modalDish').textContent = `${d.name} · ${d.price} ₽`;
-  // Determine staff list based on category
   const grid = document.getElementById('staffGrid');
-  let opts = [];
-  const cat = d.cat;
-  if(cat==='пиццы') opts = [['Лариса','#2196f3','Л']];
-  else if(cat==='шаурма' || cat==='напитки' || cat==='допы') opts = [['Алифтина','#9c27b0','А']];
-  else opts = [['Лена','#4caf50','Л'],['Алия','#ff9800','А']];
-  grid.innerHTML = opts.map(([n,c,letter])=>`
-    <button class="staff-btn" onclick="pickStaff('${n}','${c}','${letter}')">
-      <span class="dot" style="background:${c}">${letter}</span> ${n}
+  grid.innerHTML = STAFF_OPTIONS.map(o=>`
+    <button class="staff-btn" onclick="pickStaff('${o.n}','${o.color.replace(/'/g,"&apos;")}','${o.letter}')">
+      <span class="dot" style="background:${o.color}">${o.letter}</span> ${o.n}
     </button>`).join('') + `
-    <button class="staff-btn" onclick="pickStaff('Двое','#666','👥')" style="grid-column:span 2">
-      <span class="dot" style="background:#666">👥</span> Двое (вместе)
-    </button>
     <button class="staff-btn" onclick="pickStaff(null)" style="grid-column:span 2;color:var(--text-dim)">
       ⏭ Потом (разберём вечером)
     </button>
@@ -789,6 +1822,91 @@ function finishPayment(method){
     if(n<=0){ clearInterval(t); show('home'); }
   },1000);
 }
+
+// === RECEIPTS (sample data) ===
+const SAMPLE_RECEIPTS = [
+  {num:1493, time:'18:30', type:'delivery', dest:'Ленина 12, кв 45', phone:'+7 950 234-56-78', pay:'💵 Наличные', items:[
+    {name:'Филадельфия', qty:1, price:460, staff:'3. Лена', staffColor:'#4caf50', staffLetter:'Л'},
+    {name:'Шаурма классическая', qty:2, price:280, staff:'4. Алевтина', staffColor:'#9c27b0', staffLetter:'А'},
+  ]},
+  {num:1492, time:'18:15', type:'pickup', dest:'Самовывоз', phone:'+7 904 111-22-33', pay:'💳 Карта', items:[
+    {name:'Сатоми темпура', qty:1, price:375, staff:'2. Алия', staffColor:'#ff9800', staffLetter:'А'},
+    {name:'Картофель фри', qty:1, price:160, staff:'4. Алевтина', staffColor:'#9c27b0', staffLetter:'А'},
+    {name:'Коктейль молочный шоколадный', qty:1, price:260, staff:'4. Алевтина', staffColor:'#9c27b0', staffLetter:'А'},
+  ]},
+  {num:1491, time:'18:00', type:'table', dest:'Стол 2 · открыт', pay:'⌛ Открыт', items:[
+    {name:'Майкофф (сет)', qty:1, price:3155, staff:'7. Лариса / Алия', staffColor:'linear-gradient(135deg,#2196f3,#ff9800)', staffLetter:'ЛА'},
+    {name:'Чай 0.5 л', qty:2, price:200, staff:'4. Алевтина', staffColor:'#9c27b0', staffLetter:'А'},
+    {name:'Шаурма классическая', qty:1, price:280, staff:'4. Алевтина', staffColor:'#9c27b0', staffLetter:'А'},
+  ]},
+  {num:1490, time:'17:42', type:'delivery', dest:'Советская 4, кв 12', phone:'+7 922 555-77-99', pay:'💵 Наличные', items:[
+    {name:'Сандро (сет)', qty:1, price:2499, staff:'7. Лариса / Алия', staffColor:'linear-gradient(135deg,#2196f3,#ff9800)', staffLetter:'ЛА'},
+    {name:'Кисло-сладкий соус', qty:2, price:40, staff:'⏭ Потом', staffColor:'#444', staffLetter:'?'},
+    {name:'Острая шаурма', qty:2, price:300, staff:'4. Алевтина', staffColor:'#9c27b0', staffLetter:'А'},
+  ]},
+  {num:1489, time:'16:55', type:'pickup', dest:'Самовывоз', phone:'+7 911 888-66-44', pay:'💳 Карта', items:[
+    {name:'Пицца Дон Бекон', qty:1, price:550, staff:'1. Лариса', staffColor:'#2196f3', staffLetter:'Л'},
+    {name:'Филадельфия классическая', qty:1, price:585, staff:'3. Лена', staffColor:'#4caf50', staffLetter:'Л'},
+    {name:'Лава', qty:2, price:349, staff:'6. Лариса / Лена', staffColor:'linear-gradient(135deg,#2196f3,#4caf50)', staffLetter:'ЛЛ'},
+    {name:'Коктейль молочный клубничный', qty:1, price:260, staff:'4. Алевтина', staffColor:'#9c27b0', staffLetter:'А'},
+  ]},
+  {num:1488, time:'15:30', type:'delivery', dest:'Космонавтов 8, кв 32', phone:'+7 902 333-44-55', pay:'💵 Наличные', items:[
+    {name:'Шаурма классическая', qty:3, price:280, staff:'4. Алевтина', staffColor:'#9c27b0', staffLetter:'А'},
+    {name:'Острая шаурма', qty:1, price:300, staff:'4. Алевтина', staffColor:'#9c27b0', staffLetter:'А'},
+    {name:'Чай чёрный 1л', qty:1, price:200, staff:'4. Алевтина', staffColor:'#9c27b0', staffLetter:'А'},
+  ]},
+  {num:1487, time:'14:15', type:'table', dest:'Стол 1', pay:'💳 Карта', items:[
+    {name:'Любимая четвёрка (сет)', qty:1, price:1499, staff:'6. Лариса / Лена', staffColor:'linear-gradient(135deg,#2196f3,#4caf50)', staffLetter:'ЛЛ'},
+    {name:'Чай 0.5 л', qty:2, price:200, staff:'4. Алевтина', staffColor:'#9c27b0', staffLetter:'А'},
+    {name:'Сырные палочки 7шт', qty:1, price:195, staff:'4. Алевтина', staffColor:'#9c27b0', staffLetter:'А'},
+    {name:'Луковые кольца', qty:1, price:150, staff:'⏭ Потом', staffColor:'#444', staffLetter:'?'},
+  ]},
+];
+
+function typeEmoji(t){ return t==='delivery'?'🚚':t==='pickup'?'🏪':'🍽'; }
+
+function renderReceiptsList(){
+  const list = document.getElementById('receiptsList');
+  const summary = list.querySelector('.receipts-summary');
+  list.innerHTML = '';
+  list.appendChild(summary);
+  SAMPLE_RECEIPTS.forEach(r=>{
+    const total = r.items.reduce((s,i)=>s+i.price*i.qty,0);
+    const card = document.createElement('div');
+    card.className = 'receipt-card';
+    card.onclick = ()=>openDetail(r);
+    card.innerHTML = `
+      <span class="time">${r.time}</span>
+      <span class="num">#${r.num}</span>
+      <div class="info">${typeEmoji(r.type)} ${r.dest}</div>
+      <span class="amount">${total.toLocaleString('ru')} ₽</span>
+      <span class="pay-mark">${r.pay.split(' ')[0]}</span>`;
+    list.appendChild(card);
+  });
+}
+renderReceiptsList();
+
+function openDetail(r){
+  document.getElementById('detailTitle').textContent = `Чек #${r.num} · ${r.time}`;
+  const metaLines = [];
+  metaLines.push(`${typeEmoji(r.type)} ${r.dest}`);
+  if(r.phone) metaLines.push(`📞 ${r.phone}`);
+  document.getElementById('detailMeta').innerHTML = metaLines.join('<br>');
+  const items = document.getElementById('detailItems');
+  items.innerHTML = r.items.map(it=>`
+    <div class="receipt-row">
+      <div class="staff-icon" style="background:${it.staffColor}">${it.staffLetter}</div>
+      <div class="rname">${it.name}<div style="font-size:11px;color:var(--text-dim);margin-top:2px">${it.staff}</div></div>
+      <div class="rqty">×${it.qty}</div>
+      <div class="rprice">${(it.price*it.qty).toLocaleString('ru')} ₽</div>
+    </div>
+  `).join('');
+  const total = r.items.reduce((s,i)=>s+i.price*i.qty,0);
+  document.getElementById('detailTotal').textContent = total.toLocaleString('ru')+' ₽';
+  document.getElementById('detailPayment').textContent = r.pay;
+  document.getElementById('detailModal').classList.add('open');
+}
+function closeDetail(){ document.getElementById('detailModal').classList.remove('open'); }
 
 // === STOCKTAKE FILL ===
 const stockitems = [

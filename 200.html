@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rok-n-Roll">
+<title>Rok-n-Roll · Касса</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+  :root{
+    --bg:#0a0a0a; --bg-card:#1a1a1a; --bg-elev:#252525; --border:#333;
+    --text:#fff; --text-dim:#999; --accent:#ff6b35; --accent2:#ff9800;
+    --green:#4caf50; --red:#f44336; --blue:#2196f3; --purple:#9c27b0;
+  }
+  html,body{height:100%;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden;overscroll-behavior:none}
+  body{display:flex;flex-direction:column;height:100vh;height:100dvh}
+
+  /* Header */
+  .header{padding:14px 18px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0}
+  .back{background:none;border:none;color:var(--text);font-size:28px;width:42px;height:42px;border-radius:8px;cursor:pointer}
+  .back:active{background:var(--bg-elev)}
+  .header h1{font-size:18px;font-weight:600;flex:1}
+  .header-sub{font-size:13px;color:var(--text-dim)}
+  .badge{padding:4px 10px;background:var(--bg-elev);border-radius:8px;font-size:12px;color:var(--text-dim)}
+  .badge.green{color:var(--green)}
+
+  /* Screen */
+  .screen{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;flex-direction:column}
+  .screen.active{display:flex}
+
+  /* Home */
+  .home-stats{padding:24px;text-align:center;background:linear-gradient(180deg,var(--bg-card),var(--bg))}
+  .home-stats .big{font-size:38px;font-weight:700;color:var(--accent)}
+  .home-stats .label{color:var(--text-dim);margin-top:4px;font-size:14px}
+  .home-grid{padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .home-tile{background:var(--bg-card);border:2px solid var(--border);border-radius:18px;padding:24px 18px;text-align:center;cursor:pointer;transition:transform .1s}
+  .home-tile:active{transform:scale(.97);background:var(--bg-elev)}
+  .home-tile .ico{font-size:48px;margin-bottom:8px}
+  .home-tile .title{font-size:18px;font-weight:600}
+  .home-tile .sub{font-size:12px;color:var(--text-dim);margin-top:4px}
+  .home-tile.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent;color:#fff}
+  .home-tile.primary .sub{color:rgba(255,255,255,.85)}
+  .home-tile .alert{display:inline-block;background:var(--red);color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;margin-top:6px}
+
+  /* Phone input */
+  .center-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:20px;text-align:center;flex:1}
+  .phone-display{font-size:36px;font-weight:600;padding:18px 28px;background:var(--bg-card);border:2px solid var(--border);border-radius:14px;min-width:280px;letter-spacing:2px}
+  .phone-display.empty{color:var(--text-dim);font-weight:400}
+  .keypad{display:grid;grid-template-columns:repeat(3,90px);gap:12px;margin-top:6px}
+  .keypad button{width:90px;height:80px;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;color:var(--text);font-size:30px;font-weight:500;cursor:pointer}
+  .keypad button:active{background:var(--bg-elev);transform:scale(.95)}
+  .keypad .ok{background:var(--green);border-color:var(--green);color:#fff}
+  .keypad .del{color:var(--red);font-size:26px}
+  .skip-btn{padding:12px 24px;background:none;border:1px solid var(--border);border-radius:10px;color:var(--text-dim);font-size:14px;cursor:pointer}
+  .hint{font-size:14px;color:var(--text-dim)}
+
+  /* Type select */
+  .type-grid{padding:24px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;flex:1;align-content:center}
+  .type-tile{background:var(--bg-card);border:2px solid var(--border);border-radius:18px;padding:30px 16px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:180px}
+  .type-tile:active{transform:scale(.97);background:var(--bg-elev)}
+  .type-tile .emoji{font-size:56px;margin-bottom:14px}
+  .type-tile .name{font-size:17px;font-weight:600}
+
+  /* Tables */
+  .tables-grid{padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:520px;margin:0 auto;flex:1;align-content:center}
+  .table-card{background:var(--bg-card);border:2px solid var(--border);border-radius:18px;padding:24px 16px;text-align:center;cursor:pointer;min-height:140px;display:flex;flex-direction:column;justify-content:center;gap:6px}
+  .table-card:active{transform:scale(.97)}
+  .table-card.busy{border-color:var(--red);background:linear-gradient(180deg,var(--bg-card),rgba(244,67,54,.1))}
+  .table-card .num{font-size:48px;font-weight:700}
+  .table-card .status{font-size:13px;color:var(--text-dim)}
+  .table-card.busy .status{color:#ff8a80}
+  .table-card .sum{font-size:14px;font-weight:600;color:var(--accent)}
+  .guests-row{padding:0 24px 24px;text-align:center}
+  .guests-row .label{color:var(--text-dim);font-size:13px;margin-bottom:10px}
+  .guests-buttons{display:flex;gap:8px;justify-content:center}
+  .guests-buttons button{flex:1;max-width:60px;height:48px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:18px;cursor:pointer}
+  .guests-buttons button.sel{background:var(--accent);border-color:var(--accent)}
+
+  /* Address */
+  .address-form{padding:24px;display:flex;flex-direction:column;gap:16px;max-width:520px;margin:0 auto;width:100%}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:13px;color:var(--text-dim);font-weight:500}
+  .field input,.field textarea{padding:14px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:16px;font-family:inherit}
+  .field textarea{resize:none;min-height:60px}
+  .last-hint{padding:10px 14px;background:var(--bg-elev);border-radius:10px;font-size:13px;color:var(--text-dim);display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .last-hint button{padding:6px 12px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-size:12px;cursor:pointer;font-weight:600}
+  .submit-btn{padding:16px;background:var(--accent);border:none;border-radius:12px;color:#fff;font-size:17px;font-weight:600;cursor:pointer;margin-top:8px}
+  .submit-btn:active{background:var(--accent2)}
+  .submit-btn:disabled{opacity:.4}
+
+  /* POS layout */
+  .pos-layout{flex:1;display:flex;flex-direction:column;overflow:hidden}
+  .pos-top{display:flex;flex:1;overflow:hidden}
+  .pos-cats{width:130px;flex-shrink:0;background:var(--bg-card);overflow-y:auto;border-right:1px solid var(--border)}
+  .pos-cats button{display:block;width:100%;padding:14px 10px;text-align:left;background:none;border:none;color:var(--text);font-size:13px;border-left:3px solid transparent;cursor:pointer}
+  .pos-cats button:active,.pos-cats button.active{background:var(--bg-elev);border-left-color:var(--accent);color:var(--accent)}
+  .pos-cats button.fav{color:var(--accent);font-weight:600}
+  .pos-dishes{flex:1;overflow-y:auto;padding:12px}
+  .dish-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px}
+  .dish-tile{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;min-height:88px;display:flex;flex-direction:column;justify-content:center;gap:4px}
+  .dish-tile:active{background:var(--bg-elev);transform:scale(.96)}
+  .dish-tile .dname{font-size:13px;font-weight:500;line-height:1.2;max-height:46px;overflow:hidden}
+  .dish-tile .dprice{font-size:13px;color:var(--accent);font-weight:600}
+
+  /* Receipt panel */
+  .pos-bottom{background:var(--bg-card);border-top:1px solid var(--border);padding:12px 16px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;max-height:46vh}
+  .receipt-meta{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--text-dim)}
+  .receipt-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;min-height:60px;max-height:200px}
+  .receipt-empty{text-align:center;color:var(--text-dim);padding:20px;font-size:14px}
+  .receipt-row{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg-elev);border-radius:8px;font-size:14px}
+  .receipt-row .rname{flex:1;line-height:1.2}
+  .receipt-row .rqty{font-weight:600;min-width:30px;text-align:center}
+  .receipt-row .rprice{color:var(--accent);font-weight:600;min-width:60px;text-align:right;font-size:13px}
+  .receipt-row .staff-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+  .receipt-row .qty-btns{display:flex;gap:4px}
+  .receipt-row .qty-btns button{width:26px;height:26px;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:14px;cursor:pointer;font-weight:700}
+  .receipt-total-row{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid var(--border)}
+  .receipt-total{font-size:22px;font-weight:700}
+  .receipt-total-label{font-size:13px;color:var(--text-dim)}
+  .pay-btn{padding:14px 28px;background:var(--accent);border:none;border-radius:12px;color:#fff;font-size:16px;font-weight:600;cursor:pointer;min-width:140px}
+  .pay-btn:disabled{opacity:.3}
+
+  /* Staff modal */
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:100;padding:16px}
+  .modal-bg.open{display:flex}
+  .modal{background:var(--bg-card);border-radius:18px;padding:24px;max-width:380px;width:100%;text-align:center}
+  .modal h3{margin-bottom:6px;font-size:18px}
+  .modal .modal-dish{color:var(--text-dim);font-size:14px;margin-bottom:18px}
+  .modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .staff-btn{padding:18px 12px;border:2px solid var(--border);background:var(--bg);border-radius:14px;color:var(--text);font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+  .staff-btn:active{transform:scale(.96)}
+  .staff-btn .dot{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700}
+
+  /* Payment */
+  .pay-screen{padding:24px;display:flex;flex-direction:column;align-items:center;gap:24px;flex:1;justify-content:center}
+  .pay-amount{font-size:14px;color:var(--text-dim)}
+  .pay-amount .big{font-size:50px;font-weight:700;color:var(--accent);margin-top:4px}
+  .pay-options{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:420px}
+  .pay-opt{padding:24px 12px;background:var(--bg-card);border:2px solid var(--border);border-radius:16px;cursor:pointer;text-align:center;font-size:16px;font-weight:600}
+  .pay-opt:active{transform:scale(.97);background:var(--bg-elev)}
+  .pay-opt .emo{font-size:36px;display:block;margin-bottom:6px}
+
+  /* Success */
+  .success-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;text-align:center;padding:24px;gap:18px}
+  .success-emoji{font-size:90px}
+  .success-screen h2{font-size:26px}
+  .success-info{color:var(--text-dim);line-height:1.6;font-size:15px}
+  .countdown{color:var(--text-dim);font-size:13px;margin-top:8px}
+
+  /* Receipts list */
+  .receipts-list{padding:14px;display:flex;flex-direction:column;gap:8px}
+  .receipts-summary{padding:18px 16px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:14px;margin-bottom:6px}
+  .receipts-summary .big{font-size:30px;font-weight:700}
+  .receipts-summary .sub{font-size:13px;opacity:.9;margin-top:4px}
+  .receipt-card{padding:12px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;gap:12px;cursor:pointer}
+  .receipt-card:active{background:var(--bg-elev)}
+  .receipt-card .time{font-size:12px;color:var(--text-dim);min-width:50px}
+  .receipt-card .num{font-weight:600;min-width:50px;font-size:13px}
+  .receipt-card .info{flex:1;font-size:13px}
+  .receipt-card .amount{font-weight:700;color:var(--accent)}
+  .receipt-card .pay-mark{font-size:18px}
+
+  /* Stock */
+  .stock-section{padding:14px}
+  .stock-section h2{font-size:14px;color:var(--text-dim);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
+  .stock-list{display:flex;flex-direction:column;gap:6px}
+  .stock-row{padding:12px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;display:flex;justify-content:space-between;align-items:center}
+  .stock-row.warn{border-color:var(--red);background:linear-gradient(90deg,rgba(244,67,54,.15),var(--bg-card))}
+  .stock-row .sname{font-size:14px;font-weight:500}
+  .stock-row .squty{font-weight:700;font-size:14px}
+  .stock-row.warn .squty{color:#ff8a80}
+
+  /* Stocktake */
+  .stocktake-progress{padding:14px 18px;background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;font-size:13px}
+  .progress-bar{flex:1;height:8px;background:var(--bg-elev);border-radius:4px;overflow:hidden}
+  .progress-bar .fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:23%;transition:width .3s}
+  .stocktake-list{padding:14px;display:flex;flex-direction:column;gap:8px}
+  .stocktake-item{padding:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;gap:10px}
+  .stocktake-item .pos{color:var(--text-dim);font-size:12px;min-width:24px}
+  .stocktake-item .name{flex:1;font-weight:500;font-size:14px}
+  .stocktake-item input{width:100px;padding:10px 8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:16px;text-align:center;font-weight:600}
+  .stocktake-item .unit{color:var(--text-dim);font-size:13px;min-width:24px}
+  .stocktake-item button{width:42px;height:42px;background:var(--bg-elev);border:none;border-radius:10px;color:var(--text);font-size:18px;cursor:pointer}
+
+  /* Floating bar */
+  .float-bar{padding:14px 16px;background:var(--bg-card);border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0}
+  .float-bar button{flex:1;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:600;cursor:pointer}
+  .float-bar .secondary{background:var(--bg-elev);color:var(--text)}
+  .float-bar .primary{background:var(--accent);color:#fff}
+
+  /* Generic */
+  .pill{display:inline-block;padding:4px 10px;background:var(--bg-elev);border-radius:8px;font-size:12px;color:var(--text-dim)}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ ГЛАВНАЯ ═══════════ -->
+<div class="screen active" id="home">
+  <div class="header">
+    <div style="font-size:20px">☰</div>
+    <div style="flex:1">
+      <h1>Rok-n-Roll</h1>
+      <div class="header-sub">3 июня · среда</div>
+    </div>
+    <div class="badge green">🟢 онлайн</div>
+  </div>
+  <div class="home-stats">
+    <div class="big" id="todayRevenue">18 240 ₽</div>
+    <div class="label">сегодня · <span id="todayChecks">12</span> чеков · средний 1 520 ₽</div>
+  </div>
+  <div class="home-grid">
+    <div class="home-tile primary" onclick="goNewOrder()">
+      <div class="ico">🛒</div>
+      <div class="title">НОВЫЙ ЗАКАЗ</div>
+      <div class="sub">создать чек</div>
+    </div>
+    <div class="home-tile" onclick="show('receipts')">
+      <div class="ico">📋</div>
+      <div class="title">ЧЕКИ ДНЯ</div>
+      <div class="sub">12 за сегодня</div>
+    </div>
+    <div class="home-tile" onclick="show('stock')">
+      <div class="ico">📦</div>
+      <div class="title">ОСТАТКИ</div>
+      <div class="alert">3 на исходе</div>
+    </div>
+    <div class="home-tile" onclick="show('stocktake')">
+      <div class="ico">📊</div>
+      <div class="title">РЕВИЗИЯ</div>
+      <div class="sub">последняя 30.05</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ТЕЛЕФОН ═══════════ -->
+<div class="screen" id="phone">
+  <div class="header">
+    <button class="back" onclick="show('home')">←</button>
+    <h1>Новый заказ</h1>
+  </div>
+  <div class="center-screen">
+    <div class="hint">📞 Номер телефона клиента</div>
+    <div class="phone-display empty" id="phoneDisplay">+7 ___ ___ __ __</div>
+    <div class="keypad">
+      <button onclick="phoneAdd('1')">1</button>
+      <button onclick="phoneAdd('2')">2</button>
+      <button onclick="phoneAdd('3')">3</button>
+      <button onclick="phoneAdd('4')">4</button>
+      <button onclick="phoneAdd('5')">5</button>
+      <button onclick="phoneAdd('6')">6</button>
+      <button onclick="phoneAdd('7')">7</button>
+      <button onclick="phoneAdd('8')">8</button>
+      <button onclick="phoneAdd('9')">9</button>
+      <button class="del" onclick="phoneDel()">⌫</button>
+      <button onclick="phoneAdd('0')">0</button>
+      <button class="ok" onclick="phoneOk()">✓</button>
+    </div>
+    <button class="skip-btn" onclick="phoneSkip()">Без телефона →</button>
+  </div>
+</div>
+
+<!-- ═══════════ ТИП ═══════════ -->
+<div class="screen" id="type">
+  <div class="header">
+    <button class="back" onclick="show('phone')">←</button>
+    <h1 id="typePhone">+7 950 234-56-78</h1>
+  </div>
+  <div class="center-screen" style="flex:0">
+    <div class="hint" style="margin-top:20px">Как клиент получит заказ?</div>
+  </div>
+  <div class="type-grid">
+    <div class="type-tile" onclick="pickType('pickup')">
+      <div class="emoji">🏪</div>
+      <div class="name">САМОВЫВОЗ</div>
+    </div>
+    <div class="type-tile" onclick="pickType('delivery')">
+      <div class="emoji">🚚</div>
+      <div class="name">ДОСТАВКА</div>
+    </div>
+    <div class="type-tile" onclick="pickType('table')">
+      <div class="emoji">🍽</div>
+      <div class="name">В ЗАЛЕ</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ СТОЛ ═══════════ -->
+<div class="screen" id="tables">
+  <div class="header">
+    <button class="back" onclick="show('type')">←</button>
+    <h1>В зале</h1>
+    <div class="header-sub">выберите стол</div>
+  </div>
+  <div class="tables-grid">
+    <div class="table-card" onclick="pickTable(1)">
+      <div class="num">1</div>
+      <div class="status">✓ свободен</div>
+    </div>
+    <div class="table-card busy" onclick="pickTable(2,true)">
+      <div class="num">2</div>
+      <div class="status">🔴 30 мин назад</div>
+      <div class="sum">3 690 ₽</div>
+    </div>
+    <div class="table-card" onclick="pickTable(3)">
+      <div class="num">3</div>
+      <div class="status">✓ свободен</div>
+    </div>
+    <div class="table-card" onclick="pickTable(4)">
+      <div class="num">4</div>
+      <div class="status">✓ свободен</div>
+    </div>
+  </div>
+  <div class="guests-row">
+    <div class="label">Количество гостей</div>
+    <div class="guests-buttons">
+      <button onclick="pickGuests(this,1)">1</button>
+      <button onclick="pickGuests(this,2)" class="sel">2</button>
+      <button onclick="pickGuests(this,3)">3</button>
+      <button onclick="pickGuests(this,4)">4</button>
+      <button onclick="pickGuests(this,5)">5+</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ АДРЕС ═══════════ -->
+<div class="screen" id="address">
+  <div class="header">
+    <button class="back" onclick="show('type')">←</button>
+    <h1>Доставка</h1>
+  </div>
+  <div class="address-form">
+    <div class="field">
+      <label>Адрес доставки</label>
+      <input id="addrInput" placeholder="Ленина 12, кв 45">
+    </div>
+    <div class="last-hint">
+      📌 Прошлый адрес: Советская 4, кв 12
+      <button onclick="useLastAddress()">Использовать</button>
+    </div>
+    <div class="field">
+      <label>Комментарий (по желанию)</label>
+      <textarea id="addrComment" placeholder="Домофон 245, второй этаж..."></textarea>
+    </div>
+    <button class="submit-btn" onclick="goPOS()">Дальше →</button>
+  </div>
+</div>
+
+<!-- ═══════════ POS / ВЫБОР БЛЮД ═══════════ -->
+<div class="screen" id="pos">
+  <div class="header">
+    <button class="back" onclick="show('type')">←</button>
+    <h1 id="posTitle">🚚 Ленина 12</h1>
+    <button class="back" style="font-size:18px" onclick="clearReceipt()" title="Очистить">🗑</button>
+  </div>
+  <div class="pos-layout">
+    <div class="pos-top">
+      <div class="pos-cats" id="catList"></div>
+      <div class="pos-dishes">
+        <div class="dish-grid" id="dishGrid"></div>
+      </div>
+    </div>
+    <div class="pos-bottom">
+      <div class="receipt-meta">
+        <span>🛒 Чек</span>
+        <span id="receiptCount">0 позиций</span>
+      </div>
+      <div class="receipt-list" id="receiptList">
+        <div class="receipt-empty">Выбери блюда из меню</div>
+      </div>
+      <div class="receipt-total-row">
+        <div>
+          <div class="receipt-total-label">Итого</div>
+          <div class="receipt-total" id="receiptTotal">0 ₽</div>
+        </div>
+        <button class="pay-btn" id="payBtn" onclick="goPayment()" disabled>ОПЛАТА</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ОПЛАТА ═══════════ -->
+<div class="screen" id="payment">
+  <div class="header">
+    <button class="back" onclick="show('pos')">←</button>
+    <h1>Оплата</h1>
+  </div>
+  <div class="pay-screen">
+    <div class="pay-amount">
+      <div>Сумма к оплате</div>
+      <div class="big" id="payAmount">1 020 ₽</div>
+    </div>
+    <div class="pay-options">
+      <div class="pay-opt" onclick="finishPayment('💵 наличные')">
+        <span class="emo">💵</span> НАЛИЧНЫЕ
+      </div>
+      <div class="pay-opt" onclick="finishPayment('💳 карта')">
+        <span class="emo">💳</span> КАРТА
+      </div>
+      <div class="pay-opt" onclick="finishPayment('🏦 СБП')">
+        <span class="emo">🏦</span> СБП
+      </div>
+      <div class="pay-opt" onclick="finishPayment('➗ часть-часть')">
+        <span class="emo">➗</span> ЧАСТЬ-ЧАСТЬ
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ УСПЕХ ═══════════ -->
+<div class="screen" id="success">
+  <div class="success-screen">
+    <div class="success-emoji">✅</div>
+    <h2>Чек закрыт</h2>
+    <div class="success-info">
+      <div id="successDetails">#1493 · 1 020 ₽ · наличные</div>
+      <div id="successDest" style="margin-top:6px">🚚 Доставка на Ленина 12</div>
+    </div>
+    <button class="submit-btn" style="min-width:240px" onclick="goNewOrder()">Новый заказ</button>
+    <button class="skip-btn" onclick="show('home')">На главную</button>
+    <div class="countdown" id="countdown">Возврат через 5 сек...</div>
+  </div>
+</div>
+
+<!-- ═══════════ СПИСОК ЧЕКОВ ═══════════ -->
+<div class="screen" id="receipts">
+  <div class="header">
+    <button class="back" onclick="show('home')">←</button>
+    <div style="flex:1">
+      <h1>Чеки дня</h1>
+      <div class="header-sub">3 июня · 12 чеков</div>
+    </div>
+  </div>
+  <div class="receipts-list">
+    <div class="receipts-summary">
+      <div class="big">18 240 ₽</div>
+      <div class="sub">12 чеков · средний 1 520 ₽</div>
+    </div>
+    <div class="receipt-card">
+      <span class="time">18:30</span>
+      <span class="num">#1493</span>
+      <div class="info">🚚 Ленина 12</div>
+      <span class="amount">1 020 ₽</span>
+      <span class="pay-mark">💵</span>
+    </div>
+    <div class="receipt-card">
+      <span class="time">18:15</span>
+      <span class="num">#1492</span>
+      <div class="info">🏪 Самовывоз</div>
+      <span class="amount">780 ₽</span>
+      <span class="pay-mark">💳</span>
+    </div>
+    <div class="receipt-card">
+      <span class="time">18:00</span>
+      <span class="num">#1491</span>
+      <div class="info">🍽 Стол 2 · открыт</div>
+      <span class="amount">3 690 ₽</span>
+      <span class="pay-mark">⌛</span>
+    </div>
+    <div class="receipt-card">
+      <span class="time">17:42</span>
+      <span class="num">#1490</span>
+      <div class="info">🚚 Советская 4</div>
+      <span class="amount">3 250 ₽</span>
+      <span class="pay-mark">💵</span>
+    </div>
+    <div class="receipt-card">
+      <span class="time">16:55</span>
+      <span class="num">#1489</span>
+      <div class="info">🏪 Самовывоз</div>
+      <span class="amount">2 100 ₽</span>
+      <span class="pay-mark">💳</span>
+    </div>
+    <div class="receipt-card">
+      <span class="time">15:30</span>
+      <span class="num">#1488</span>
+      <div class="info">🚚 Космонавтов 8</div>
+      <span class="amount">1 460 ₽</span>
+      <span class="pay-mark">💵</span>
+    </div>
+    <div class="receipt-card">
+      <span class="time">14:15</span>
+      <span class="num">#1487</span>
+      <div class="info">🍽 Стол 1</div>
+      <span class="amount">2 480 ₽</span>
+      <span class="pay-mark">💳</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ОСТАТКИ ═══════════ -->
+<div class="screen" id="stock">
+  <div class="header">
+    <button class="back" onclick="show('home')">←</button>
+    <h1>Остатки</h1>
+    <div class="header-sub">3 июня</div>
+  </div>
+  <div class="stock-section">
+    <h2>⚠ Заканчивается</h2>
+    <div class="stock-list">
+      <div class="stock-row warn"><span class="sname">Лосось (филе внутрянка)</span><span class="squty">0.16 кг</span></div>
+      <div class="stock-row warn"><span class="sname">Креветки варёные</span><span class="squty">0.88 кг</span></div>
+      <div class="stock-row warn"><span class="sname">Лаваш</span><span class="squty">37 шт</span></div>
+    </div>
+  </div>
+  <div class="stock-section">
+    <h2>🟢 Сырьё (топ-10)</h2>
+    <div class="stock-list">
+      <div class="stock-row"><span class="sname">Майонез</span><span class="squty">32.63 кг</span></div>
+      <div class="stock-row"><span class="sname">Мука темпурная</span><span class="squty">26.21 кг</span></div>
+      <div class="stock-row"><span class="sname">Кикоман</span><span class="squty">24.40 кг</span></div>
+      <div class="stock-row"><span class="sname">Рис (сырой)</span><span class="squty">23.41 кг</span></div>
+      <div class="stock-row"><span class="sname">Сыр творожный</span><span class="squty">17.76 кг</span></div>
+      <div class="stock-row"><span class="sname">Курица для шаурмы</span><span class="squty">14.27 кг</span></div>
+      <div class="stock-row"><span class="sname">Мука хлебопекарная</span><span class="squty">11.27 кг</span></div>
+      <div class="stock-row"><span class="sname">Лосось целый</span><span class="squty">9.67 кг</span></div>
+      <div class="stock-row"><span class="sname">Масло фритюрное</span><span class="squty">8.89 кг</span></div>
+      <div class="stock-row"><span class="sname">Сухари</span><span class="squty">7.28 кг</span></div>
+    </div>
+  </div>
+  <div class="stock-section">
+    <h2>📦 Упаковка</h2>
+    <div class="stock-list">
+      <div class="stock-row"><span class="sname">Упаковка для шаурмы</span><span class="squty">1 300 шт</span></div>
+      <div class="stock-row"><span class="sname">Стаканы одноразовые</span><span class="squty">464 шт</span></div>
+      <div class="stock-row"><span class="sname">Ланч-бокс белый</span><span class="squty">262 шт</span></div>
+      <div class="stock-row"><span class="sname">Соусничка 30 мл</span><span class="squty">274 шт</span></div>
+      <div class="stock-row"><span class="sname">Ланч-бокс чёрный</span><span class="squty">186 шт</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ РЕВИЗИЯ ═══════════ -->
+<div class="screen" id="stocktake">
+  <div class="header">
+    <button class="back" onclick="show('home')">←</button>
+    <h1>Ревизия 03.06</h1>
+    <button class="back" style="font-size:20px" onclick="alert('Сохранено')">✓</button>
+  </div>
+  <div class="stocktake-progress">
+    <span>Заполнено</span>
+    <div class="progress-bar"><div class="fill" id="stProgress"></div></div>
+    <span><span id="stCount">23</span>/99</span>
+  </div>
+  <div class="stocktake-list" id="stocktakeList"></div>
+</div>
+
+<!-- ═══════════ STAFF MODAL ═══════════ -->
+<div class="modal-bg" id="staffModal">
+  <div class="modal">
+    <h3>Кто делает?</h3>
+    <div class="modal-dish" id="modalDish">Филадельфия · 460 ₽</div>
+    <div class="modal-grid" id="staffGrid">
+      <button class="staff-btn" onclick="pickStaff('Лена')">
+        <span class="dot" style="background:#4caf50">Л</span> Лена
+      </button>
+      <button class="staff-btn" onclick="pickStaff('Алия')">
+        <span class="dot" style="background:#ff9800">А</span> Алия
+      </button>
+      <button class="staff-btn" onclick="pickStaff('Алифтина')">
+        <span class="dot" style="background:#9c27b0">А</span> Алифтина
+      </button>
+      <button class="staff-btn" onclick="pickStaff('Лариса')">
+        <span class="dot" style="background:#2196f3">Л</span> Лариса
+      </button>
+      <button class="staff-btn" onclick="pickStaff('👥 Двое')" style="grid-column:span 2">
+        <span class="dot" style="background:#666">👥</span> Двое (вместе)
+      </button>
+      <button class="staff-btn" onclick="pickStaff(null)" style="grid-column:span 2;color:var(--text-dim)">
+        ⏭ Потом (разберём вечером)
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// === STATE ===
+let phone = '';
+let orderType = null;     // 'pickup' | 'delivery' | 'table'
+let tableNum = null;
+let receipt = [];
+let pendingDish = null;
+let dishesData = [];
+
+// === DISHES LOAD ===
+fetch('dishes.json').then(r=>r.json()).then(data=>{
+  dishesData = data;
+  buildCats();
+});
+
+// Categories order
+const CATS = ['★ Топ-15','шаурма','сеты','холодные роллы','запеченные роллы','жареные роллы','простые роллы','пиццы','допы','напитки'];
+
+const TOP15 = ['шаурма классическая','острая шаурма','филадельфия','филадельфия классическая','лава','шанхай','аляска','бум','с соусом лава','жареная цыпа','запеченный с лососем','запеченный с крабом','чикен','пеперони','майкофф'];
+
+function buildCats(){
+  const catList = document.getElementById('catList');
+  catList.innerHTML = CATS.map(c=>`<button onclick="selectCat('${c}')" class="${c==='★ Топ-15'?'fav active':''}">${c}</button>`).join('');
+  selectCat('★ Топ-15');
+}
+
+function selectCat(cat){
+  document.querySelectorAll('.pos-cats button').forEach(b=>b.classList.remove('active'));
+  [...document.querySelectorAll('.pos-cats button')].find(b=>b.textContent===cat)?.classList.add('active');
+  let dishes;
+  if(cat==='★ Топ-15'){
+    dishes = TOP15.map(n=>dishesData.find(d=>d.name===n)).filter(Boolean);
+  } else {
+    dishes = dishesData.filter(d=>d.cat===cat);
+  }
+  document.getElementById('dishGrid').innerHTML = dishes.map(d=>`
+    <div class="dish-tile" onclick='addDish(${JSON.stringify(d).replace(/'/g,"&apos;")})'>
+      <div class="dname">${d.name}</div>
+      <div class="dprice">${d.price} ₽</div>
+    </div>`).join('');
+}
+
+// === SCREENS ===
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// === HOME → NEW ORDER ===
+function goNewOrder(){
+  phone = '';
+  updatePhoneDisplay();
+  show('phone');
+}
+
+// === PHONE ===
+function phoneAdd(d){ if(phone.length<10){ phone += d; updatePhoneDisplay(); } }
+function phoneDel(){ phone = phone.slice(0,-1); updatePhoneDisplay(); }
+function updatePhoneDisplay(){
+  const disp = document.getElementById('phoneDisplay');
+  if(phone===''){ disp.textContent='+7 ___ ___ __ __'; disp.classList.add('empty'); return; }
+  disp.classList.remove('empty');
+  const p = phone.padEnd(10,'_');
+  disp.textContent = `+7 ${p.slice(0,3)} ${p.slice(3,6)} ${p.slice(6,8)} ${p.slice(8,10)}`.replace(/_/g,'_');
+}
+function phoneOk(){
+  if(phone.length<10) { alert('Введи полный номер'); return; }
+  document.getElementById('typePhone').textContent = '+7 '+phone.slice(0,3)+' '+phone.slice(3,6)+'-'+phone.slice(6,8)+'-'+phone.slice(8,10);
+  show('type');
+}
+function phoneSkip(){
+  document.getElementById('typePhone').textContent = 'Без телефона';
+  show('type');
+}
+
+// === TYPE ===
+function pickType(t){
+  orderType = t;
+  if(t==='table') show('tables');
+  else if(t==='delivery') show('address');
+  else goPOS();
+}
+
+// === TABLES ===
+function pickTable(n,busy){
+  tableNum = n;
+  document.getElementById('posTitle').innerHTML = `🍽 Стол ${n}${busy?' · продолжение':''}`;
+  goPOS();
+}
+function pickGuests(btn,n){
+  document.querySelectorAll('.guests-buttons button').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+
+// === ADDRESS ===
+function useLastAddress(){
+  document.getElementById('addrInput').value = 'Советская 4, кв 12';
+}
+function goPOS(){
+  if(orderType==='delivery'){
+    const addr = document.getElementById('addrInput').value || 'Ленина 12, кв 45';
+    document.getElementById('posTitle').innerHTML = `🚚 ${addr}`;
+  } else if(orderType==='pickup'){
+    document.getElementById('posTitle').innerHTML = `🏪 Самовывоз ${phone? '· +7'+phone.slice(0,3)+'...':''}`;
+  }
+  show('pos');
+}
+
+// === ADD DISH ===
+function addDish(d){
+  pendingDish = d;
+  document.getElementById('modalDish').textContent = `${d.name} · ${d.price} ₽`;
+  // Determine staff list based on category
+  const grid = document.getElementById('staffGrid');
+  let opts = [];
+  const cat = d.cat;
+  if(cat==='пиццы') opts = [['Лариса','#2196f3','Л']];
+  else if(cat==='шаурма' || cat==='напитки' || cat==='допы') opts = [['Алифтина','#9c27b0','А']];
+  else opts = [['Лена','#4caf50','Л'],['Алия','#ff9800','А']];
+  grid.innerHTML = opts.map(([n,c,letter])=>`
+    <button class="staff-btn" onclick="pickStaff('${n}','${c}','${letter}')">
+      <span class="dot" style="background:${c}">${letter}</span> ${n}
+    </button>`).join('') + `
+    <button class="staff-btn" onclick="pickStaff('Двое','#666','👥')" style="grid-column:span 2">
+      <span class="dot" style="background:#666">👥</span> Двое (вместе)
+    </button>
+    <button class="staff-btn" onclick="pickStaff(null)" style="grid-column:span 2;color:var(--text-dim)">
+      ⏭ Потом (разберём вечером)
+    </button>
+  `;
+  document.getElementById('staffModal').classList.add('open');
+}
+
+function pickStaff(name,color,letter){
+  document.getElementById('staffModal').classList.remove('open');
+  if(!pendingDish) return;
+  // check if same dish + same staff already in receipt
+  const idx = receipt.findIndex(r=>r.name===pendingDish.name && r.staff===name);
+  if(idx>=0) receipt[idx].qty += 1;
+  else receipt.push({...pendingDish, staff:name, staffColor:color, staffLetter:letter, qty:1});
+  pendingDish = null;
+  renderReceipt();
+}
+
+function renderReceipt(){
+  const list = document.getElementById('receiptList');
+  if(receipt.length===0){
+    list.innerHTML = '<div class="receipt-empty">Выбери блюда из меню</div>';
+    document.getElementById('receiptCount').textContent = '0 позиций';
+    document.getElementById('receiptTotal').textContent = '0 ₽';
+    document.getElementById('payBtn').disabled = true;
+    return;
+  }
+  list.innerHTML = receipt.map((r,i)=>`
+    <div class="receipt-row">
+      ${r.staff?`<div class="staff-icon" style="background:${r.staffColor||'#666'}">${r.staffLetter||r.staff[0]}</div>`:`<div class="staff-icon" style="background:#444">?</div>`}
+      <div class="rname">${r.name}</div>
+      <div class="qty-btns">
+        <button onclick="changeQty(${i},-1)">−</button>
+        <button onclick="changeQty(${i},1)">+</button>
+      </div>
+      <div class="rqty">×${r.qty}</div>
+      <div class="rprice">${(r.price*r.qty).toLocaleString('ru')} ₽</div>
+    </div>
+  `).join('');
+  const total = receipt.reduce((s,r)=>s+r.price*r.qty,0);
+  document.getElementById('receiptCount').textContent = receipt.length + ' поз. · ' + receipt.reduce((s,r)=>s+r.qty,0) + ' шт';
+  document.getElementById('receiptTotal').textContent = total.toLocaleString('ru') + ' ₽';
+  document.getElementById('payBtn').disabled = false;
+}
+function changeQty(i,d){
+  receipt[i].qty += d;
+  if(receipt[i].qty<=0) receipt.splice(i,1);
+  renderReceipt();
+}
+function clearReceipt(){
+  if(!receipt.length) return;
+  if(confirm('Очистить чек?')){
+    receipt = [];
+    renderReceipt();
+  }
+}
+
+// === PAYMENT ===
+function goPayment(){
+  if(!receipt.length) return;
+  const total = receipt.reduce((s,r)=>s+r.price*r.qty,0);
+  document.getElementById('payAmount').textContent = total.toLocaleString('ru') + ' ₽';
+  show('payment');
+}
+function finishPayment(method){
+  const num = 1493 + Math.floor(Math.random()*20);
+  const total = receipt.reduce((s,r)=>s+r.price*r.qty,0);
+  document.getElementById('successDetails').textContent = `#${num} · ${total.toLocaleString('ru')} ₽ · ${method}`;
+  let dest = '';
+  if(orderType==='delivery') dest = '🚚 Доставка на ' + (document.getElementById('addrInput').value||'Ленина 12');
+  else if(orderType==='table') dest = '🍽 Стол ' + tableNum;
+  else dest = '🏪 Самовывоз';
+  document.getElementById('successDest').textContent = dest;
+  // Increment today
+  const cur = parseInt(document.getElementById('todayRevenue').textContent.replace(/\D/g,''))+total;
+  document.getElementById('todayRevenue').textContent = cur.toLocaleString('ru')+' ₽';
+  const checks = parseInt(document.getElementById('todayChecks').textContent)+1;
+  document.getElementById('todayChecks').textContent = checks;
+  receipt = [];
+  show('success');
+  let n = 5;
+  const cdEl = document.getElementById('countdown');
+  cdEl.textContent = `Возврат через ${n} сек...`;
+  const t = setInterval(()=>{
+    n--;
+    cdEl.textContent = `Возврат через ${n} сек...`;
+    if(n<=0){ clearInterval(t); show('home'); }
+  },1000);
+}
+
+// === STOCKTAKE FILL ===
+const stockitems = [
+  {n:'Пепперони',v:'1.850',u:'кг',done:1},
+  {n:'Нори',v:'400',u:'шт',done:1},
+  {n:'Тортилья',v:'31',u:'шт',done:1},
+  {n:'Масаго',v:'0.600',u:'кг',done:1},
+  {n:'Крабовые палочки',v:'3.000',u:'кг',done:1},
+  {n:'Ветчина на пиццу',v:'1.495',u:'кг',done:1},
+  {n:'Моцарелла',v:'2.669',u:'кг',done:1},
+  {n:'Имбирь',v:'2.919',u:'кг',done:1},
+  {n:'Рис сырой',v:'23.410',u:'кг',done:1},
+  {n:'Майонез',v:'32.630',u:'кг',done:1},
+  {n:'Мицукан коробка',v:'7.950',u:'кг',done:1},
+  {n:'Кикоман коробка',v:'24.400',u:'кг',done:1},
+  {n:'Васаби порошок',v:'0.775',u:'кг',done:1},
+  {n:'Грудка копчёная',v:'2.050',u:'кг',done:1},
+  {n:'Фришка',v:'6.155',u:'кг',done:1},
+  {n:'Наггетсы',v:'3.790',u:'кг',done:1},
+  {n:'Сырные палочки',v:'1.440',u:'кг',done:1},
+  {n:'Крылья копчёные',v:'1.630',u:'кг',done:1},
+  {n:'Креветки в кляре',v:'',u:'кг',done:0},
+  {n:'Молоко',v:'1.096',u:'л',done:1},
+  {n:'Мороженое',v:'',u:'кг',done:0},
+  {n:'Топпинг клубника',v:'0.295',u:'кг',done:1},
+  {n:'Топпинг ваниль',v:'0.805',u:'кг',done:1},
+  {n:'Топпинг шоколад',v:'',u:'кг',done:0},
+];
+document.getElementById('stocktakeList').innerHTML = stockitems.map((it,i)=>`
+  <div class="stocktake-item">
+    <span class="pos">${i+1}.</span>
+    <span class="name">${it.n}</span>
+    <input type="text" value="${it.v}" placeholder="—">
+    <span class="unit">${it.u}</span>
+    <button onclick="this.style.opacity=.4">📷</button>
+  </div>
+`).join('');
+</script>
+</body>
+</html>
