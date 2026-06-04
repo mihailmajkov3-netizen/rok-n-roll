@@ -1330,13 +1330,13 @@
       </div>
     </div>
 
+    <button class="submit-btn" style="background:linear-gradient(135deg,#6e3df8,#a855f7);font-size:18px;padding:18px;margin-top:14px" onclick="sendOrder('share')">
+      📤 Отправить заявку
+    </button>
+    <div style="font-size:12px;color:var(--text-dim);text-align:center;margin-top:6px">
+      выберешь Макс / WhatsApp / Telegram в окне поделиться
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px">
-      <button class="submit-btn" style="background:#6e3df8" onclick="sendOrder('max')">
-        💜 Макс
-      </button>
-      <button class="submit-btn" style="background:#25d366" onclick="sendOrder('whatsapp')">
-        💬 WhatsApp
-      </button>
       <button class="submit-btn" style="background:var(--bg-elev);color:var(--text)" onclick="sendOrder('copy')">
         📋 Скопировать
       </button>
@@ -1565,31 +1565,53 @@ function buildOrderText(){
   return `🍣 Rok-n-Roll · заявка ${date}\n${currentSupplier.emoji} ${currentSupplier.name}\n\n${items.join('\n')}\n${comment?'\nКомментарий: '+comment:''}`;
 }
 
+function fallbackCopy(txt){
+  // Старый способ копирования (работает на iOS Safari синхронно с user gesture)
+  const ta = document.createElement('textarea');
+  ta.value = txt;
+  ta.style.position = 'fixed';
+  ta.style.top = '0';
+  ta.style.left = '0';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try {
+    document.execCommand('copy');
+    alert('✅ Текст заявки скопирован.\n\nТеперь открой нужный мессенджер → чат поставщика → зажми поле ввода → «Вставить».');
+  } catch(e){
+    prompt('Скопируй вручную:', txt);
+  }
+  document.body.removeChild(ta);
+}
+
 function sendOrder(method){
   const txt = buildOrderText();
   if(!document.querySelectorAll('#orderItemsList input[type=checkbox]:checked').length){
     alert('Выбери хотя бы одну позицию');
     return;
   }
+  if(method==='share'){
+    // Web Share API — нативный share-sheet (iOS / Android)
+    if(navigator.share){
+      navigator.share({
+        title: `Заявка ${currentSupplier.name}`,
+        text: txt,
+      }).catch(err=>{
+        // Если пользователь отменил — ничего не делаем
+        if(err.name !== 'AbortError'){
+          // Fallback: копируем в буфер
+          fallbackCopy(txt);
+        }
+      });
+    } else {
+      // Браузер не поддерживает Web Share — копируем
+      fallbackCopy(txt);
+    }
+    return;
+  }
   if(method==='copy'){
-    navigator.clipboard.writeText(txt).then(()=>{
-      alert('Скопировано в буфер!\nВставь в WhatsApp / Telegram / любой мессенджер.');
-    }).catch(()=>{
-      prompt('Скопируй вручную:', txt);
-    });
-    return;
-  }
-  if(method==='max'){
-    // Прямого share-URL у Max пока нет — копируем в буфер и подсказываем
-    navigator.clipboard.writeText(txt).then(()=>{
-      alert('✅ Текст заявки скопирован.\n\nОткрой Макс → выбери чат поставщика → вставь (зажми палец, «Вставить»).');
-      window.open('https://max.ru/', '_blank');
-    }).catch(()=>prompt('Скопируй вручную и вставь в Макс:', txt));
-    return;
-  }
-  if(method==='whatsapp'){
-    const url = 'https://wa.me/?text=' + encodeURIComponent(txt);
-    window.open(url, '_blank');
+    fallbackCopy(txt);
     return;
   }
   if(method==='pdf'){
