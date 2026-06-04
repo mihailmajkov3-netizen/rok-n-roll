@@ -1329,8 +1329,8 @@
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px">
-      <button class="submit-btn" style="background:#0088cc" onclick="sendOrder('telegram')">
-        ✈ Telegram
+      <button class="submit-btn" style="background:#6e3df8" onclick="sendOrder('max')">
+        💜 Макс
       </button>
       <button class="submit-btn" style="background:#25d366" onclick="sendOrder('whatsapp')">
         💬 WhatsApp
@@ -1530,9 +1530,12 @@ function sendOrder(method){
     });
     return;
   }
-  if(method==='telegram'){
-    const url = 'https://t.me/share/url?url=' + encodeURIComponent(txt);
-    window.open(url, '_blank');
+  if(method==='max'){
+    // Прямого share-URL у Max пока нет — копируем в буфер и подсказываем
+    navigator.clipboard.writeText(txt).then(()=>{
+      alert('✅ Текст заявки скопирован.\n\nОткрой Макс → выбери чат поставщика → вставь (зажми палец, «Вставить»).');
+      window.open('https://max.ru/', '_blank');
+    }).catch(()=>prompt('Скопируй вручную и вставь в Макс:', txt));
     return;
   }
   if(method==='whatsapp'){
